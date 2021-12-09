@@ -13,7 +13,8 @@ build: [
     "COVERAGE=true" {bisect_ppx:installed}
     "libffi.config"
     "ctypes-base"
-    "ctypes-stubs"]
+    "ctypes-stubs"
+    "ctypes-cbuf"]
   [make "XEN=%{mirage-xen:enable}%" "ctypes-foreign"] {ctypes-foreign:installed}
 ]
 install: [

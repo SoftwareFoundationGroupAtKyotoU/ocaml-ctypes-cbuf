@@ -82,6 +82,11 @@ _build/src/cstubs/cstubs_structs.cmx : _build/src/ctypes/ctypes_types.cmi _build
 _build/src/cstubs/ctypes_path.cmi :
 _build/src/cstubs/ctypes_path.cmo : _build/src/cstubs/ctypes_path.cmi
 _build/src/cstubs/ctypes_path.cmx : _build/src/cstubs/ctypes_path.cmi
+
+_build/src/cbuf/cbuf.cmi : _build/src/ctypes/ctypes.cmi
+_build/src/cbuf/cbuf.cmo : _build/src/ctypes/ctypes.cmi  _build/src/cbuf/cbuf.cmi
+_build/src/cbuf/cbuf.cmx : _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf.cmi
+
 _build/src/ctypes-foreign/ctypes_closure_properties.cmi :
 _build/src/ctypes-foreign/ctypes_closure_properties.cmo : _build/src/ctypes-foreign/ctypes_closure_properties.cmi
 _build/src/ctypes-foreign/ctypes_closure_properties.cmx : _build/src/ctypes-foreign/ctypes_closure_properties.cmi
