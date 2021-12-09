@@ -41,3 +41,14 @@ package "foreign" (
  archive(native, plugin) = "ctypes-foreign.cmxs"
  exists_if = "ctypes-foreign.cma"
 )
+
+package "cbuf" (
+  version = "0.19.1"
+  description = "cbuf"
+  requires = "ctypes"
+  archive(byte) = "cbuf.cma"
+  archive(byte, plugin) = "cbuf.cma"
+  archive(native) = "cbuf.cmxa"
+  archive(native, plugin) = "cbuf.cmxs"
+  exists_if = "cbuf.cma"
+)
