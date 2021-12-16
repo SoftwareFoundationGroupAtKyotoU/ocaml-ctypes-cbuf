@@ -1,7 +1,6 @@
-let () =
-  let fmt = Format.formatter_of_out_channel (open_out "cstubs_gen.c") in
-  Format.fprintf fmt "#include \"c/sample.h\"\n";
-  Cstubs.write_c fmt ~prefix:"caml_" (module Bindings.C);
-
-  let fmt = Format.formatter_of_out_channel (open_out "cbuf_gen.ml") in
-  Cbuf.write_ml fmt (module Bindings.C);
+module C(F: Ctypes.FOREIGN) = struct
+  module IP = struct
+    let ip_addr_pton = 
+      F.(foreign "ip_addr_pton" (Ctypes.string @-> Ctypes.ocaml_bytes @-> returning Ctypes.int))
+  end
+end
