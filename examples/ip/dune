@@ -1,0 +1,32 @@
+(library
+ (name bindings)
+ (libraries ctypes)
+ (modules bindings))
+
+(executable
+ (name bindgen)
+ (libraries ctypes.stubs bindings ctypes.cbuf)
+ (modules bindgen))
+
+(rule
+  (targets cstubs_gen.c cstubs_gen.ml cbuf_gen.ml)
+  (action
+    (run ./bindgen.exe)))
+
+(library
+ (name cstubs_gen)
+ (libraries ctypes.stubs bindings)
+ (modules cstubs_gen)
+ (foreign_stubs
+  (language c)
+  (names ip_addr_pton cstubs_gen)))
+
+; (library
+;  (name cbuf_gen)
+;  (libraries ctypes generated)
+;  (modules cbuf_gen))
+
+(executable
+ (name ip)
+ (libraries cstubs_gen ctypes)
+ (modules ip))

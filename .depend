@@ -45,6 +45,9 @@ _build/examples/ncurses/stub-generation/stub-generator/ncurses_stub_generator.cm
 _build/examples/sigset/sigset.cmi : _build/src/ctypes/posixTypes.cmi _build/src/ctypes/ctypes.cmi
 _build/examples/sigset/sigset.cmo : _build/src/ctypes/posixTypes.cmi _build/src/ctypes-foreign/foreign.cmi _build/src/ctypes/ctypes.cmi _build/examples/sigset/sigset.cmi
 _build/examples/sigset/sigset.cmx : _build/src/ctypes/posixTypes.cmx _build/src/ctypes-foreign/foreign.cmx _build/src/ctypes/ctypes.cmx _build/examples/sigset/sigset.cmi
+_build/src/cbuf/cbuf.cmi : _build/src/ctypes/ctypes.cmi
+_build/src/cbuf/cbuf.cmo : _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf.cmi
+_build/src/cbuf/cbuf.cmx : _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf.cmi
 _build/src/configure/extract_from_c.cmo :
 _build/src/configure/extract_from_c.cmx :
 _build/src/configure/gen_c_primitives.cmo :
@@ -82,35 +85,30 @@ _build/src/cstubs/cstubs_structs.cmx : _build/src/ctypes/ctypes_types.cmi _build
 _build/src/cstubs/ctypes_path.cmi :
 _build/src/cstubs/ctypes_path.cmo : _build/src/cstubs/ctypes_path.cmi
 _build/src/cstubs/ctypes_path.cmx : _build/src/cstubs/ctypes_path.cmi
-
-_build/src/cbuf/cbuf.cmi : _build/src/ctypes/ctypes.cmi
-_build/src/cbuf/cbuf.cmo : _build/src/ctypes/ctypes.cmi  _build/src/cbuf/cbuf.cmi
-_build/src/cbuf/cbuf.cmx : _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf.cmi
-
 _build/src/ctypes-foreign/ctypes_closure_properties.cmi :
 _build/src/ctypes-foreign/ctypes_closure_properties.cmo : _build/src/ctypes-foreign/ctypes_closure_properties.cmi
 _build/src/ctypes-foreign/ctypes_closure_properties.cmx : _build/src/ctypes-foreign/ctypes_closure_properties.cmi
 _build/src/ctypes-foreign/ctypes_ffi.cmi : _build/src/ctypes-foreign/libffi_abi.cmi _build/src/ctypes/ctypes_static.cmi
-_build/src/ctypes-foreign/ctypes_ffi.cmo : _build/src/ctypes-foreign/libffi_abi.cmi _build/src/ctypes-foreign/ctypes_weak_ref.cmi _build/src/ctypes/ctypes_type_printing.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_ptr.cmo _build/src/ctypes/ctypes_primitives.cmo _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes_memory_stubs.cmo _build/src/ctypes/ctypes_memory.cmo _build/src/ctypes-foreign/ctypes_ffi_stubs.cmo _build/src/ctypes-foreign/ctypes_ffi.cmi
-_build/src/ctypes-foreign/ctypes_ffi.cmx : _build/src/ctypes-foreign/libffi_abi.cmx _build/src/ctypes-foreign/ctypes_weak_ref.cmx _build/src/ctypes/ctypes_type_printing.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_ptr.cmx _build/src/ctypes/ctypes_primitives.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes_memory_stubs.cmx _build/src/ctypes/ctypes_memory.cmx _build/src/ctypes-foreign/ctypes_ffi_stubs.cmx _build/src/ctypes-foreign/ctypes_ffi.cmi
+_build/src/ctypes-foreign/ctypes_ffi.cmo : _build/src/ctypes-foreign/libffi_abi.cmi _build/src/ctypes-foreign/ctypes_weak_ref.cmi _build/src/ctypes/ctypes_type_printing.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_ptr.cmo _build/src/ctypes/ctypes_primitives.cmo _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes_memory_stubs.cmo _build/src/ctypes/ctypes_memory.cmo _build/src/ctypes-foreign/ctypes_ffi_stubs.cmo _build/src/ctypes/ctypes.cmi _build/src/ctypes-foreign/ctypes_ffi.cmi
+_build/src/ctypes-foreign/ctypes_ffi.cmx : _build/src/ctypes-foreign/libffi_abi.cmx _build/src/ctypes-foreign/ctypes_weak_ref.cmx _build/src/ctypes/ctypes_type_printing.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_ptr.cmx _build/src/ctypes/ctypes_primitives.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes_memory_stubs.cmx _build/src/ctypes/ctypes_memory.cmx _build/src/ctypes-foreign/ctypes_ffi_stubs.cmx _build/src/ctypes/ctypes.cmx _build/src/ctypes-foreign/ctypes_ffi.cmi
 _build/src/ctypes-foreign/ctypes_ffi_stubs.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_ptr.cmo _build/src/ctypes/ctypes_primitive_types.cmi
 _build/src/ctypes-foreign/ctypes_ffi_stubs.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_ptr.cmx _build/src/ctypes/ctypes_primitive_types.cmx
 _build/src/ctypes-foreign/ctypes_foreign_basis.cmo : _build/src/ctypes-foreign/libffi_abi.cmi _build/src/ctypes-foreign/dl.cmi _build/src/ctypes/ctypes_std_views.cmo _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_ptr.cmo _build/src/ctypes-foreign/ctypes_ffi_stubs.cmo _build/src/ctypes-foreign/ctypes_ffi.cmi _build/src/ctypes/ctypes_coerce.cmi _build/src/ctypes/ctypes.cmi
 _build/src/ctypes-foreign/ctypes_foreign_basis.cmx : _build/src/ctypes-foreign/libffi_abi.cmx _build/src/ctypes-foreign/dl.cmx _build/src/ctypes/ctypes_std_views.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_ptr.cmx _build/src/ctypes-foreign/ctypes_ffi_stubs.cmx _build/src/ctypes-foreign/ctypes_ffi.cmx _build/src/ctypes/ctypes_coerce.cmx _build/src/ctypes/ctypes.cmx
+_build/src/ctypes-foreign/ctypes_foreign_threaded_stubs.cmo :
+_build/src/ctypes-foreign/ctypes_foreign_threaded_stubs.cmx :
 _build/src/ctypes-foreign/ctypes_weak_ref.cmi :
 _build/src/ctypes-foreign/ctypes_weak_ref.cmo : _build/src/ctypes-foreign/ctypes_weak_ref.cmi
 _build/src/ctypes-foreign/ctypes_weak_ref.cmx : _build/src/ctypes-foreign/ctypes_weak_ref.cmi
 _build/src/ctypes-foreign/dl.cmi :
 _build/src/ctypes-foreign/dl.cmo : _build/src/ctypes-foreign/dl.cmi
 _build/src/ctypes-foreign/dl.cmx : _build/src/ctypes-foreign/dl.cmi
-_build/src/ctypes-foreign/libffi_abi.cmi :
-_build/src/ctypes-foreign/libffi_abi.cmo : _build/src/ctypes/ctypes.cmi _build/src/ctypes-foreign/libffi_abi.cmi
-_build/src/ctypes-foreign/libffi_abi.cmx : _build/src/ctypes/ctypes.cmx _build/src/ctypes-foreign/libffi_abi.cmi
-_build/src/ctypes-foreign/ctypes_foreign_threaded_stubs.cmo :
-_build/src/ctypes-foreign/ctypes_foreign_threaded_stubs.cmx :
 _build/src/ctypes-foreign/foreign.cmi : _build/src/ctypes-foreign/libffi_abi.cmi _build/src/ctypes-foreign/dl.cmi _build/src/ctypes/ctypes.cmi
 _build/src/ctypes-foreign/foreign.cmo : _build/src/ctypes-foreign/ctypes_foreign_threaded_stubs.cmo _build/src/ctypes-foreign/ctypes_foreign_basis.cmo _build/src/ctypes-foreign/ctypes_closure_properties.cmi _build/src/ctypes-foreign/foreign.cmi
 _build/src/ctypes-foreign/foreign.cmx : _build/src/ctypes-foreign/ctypes_foreign_threaded_stubs.cmx _build/src/ctypes-foreign/ctypes_foreign_basis.cmx _build/src/ctypes-foreign/ctypes_closure_properties.cmx _build/src/ctypes-foreign/foreign.cmi
+_build/src/ctypes-foreign/libffi_abi.cmi :
+_build/src/ctypes-foreign/libffi_abi.cmo : _build/src/ctypes/ctypes.cmi _build/src/ctypes-foreign/libffi_abi.cmi
+_build/src/ctypes-foreign/libffi_abi.cmx : _build/src/ctypes/ctypes.cmx _build/src/ctypes-foreign/libffi_abi.cmi
 _build/src/ctypes-top/ctypes_printers.cmi : _build/src/ctypes/posixTypes.cmi _build/src/ctypes/lDouble.cmi _build/src/ctypes/ctypes.cmi _build/src/ctypes/complexL.cmi
 _build/src/ctypes-top/ctypes_printers.cmo : _build/src/ctypes/posixTypes.cmi _build/src/ctypes/lDouble.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/ctypes/complexL.cmi _build/src/ctypes-top/ctypes_printers.cmi
 _build/src/ctypes-top/ctypes_printers.cmx : _build/src/ctypes/posixTypes.cmx _build/src/ctypes/lDouble.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes.cmx _build/src/ctypes/complexL.cmx _build/src/ctypes-top/ctypes_printers.cmi
