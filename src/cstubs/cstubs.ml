@@ -56,6 +56,7 @@ let write_return :
       end
 
 let write_fn ~concurrency ~errno fmt =
+  let _ = concurrency and _ = errno in
   begin
     Format.fprintf fmt "type 'a fn =@\n";
     Format.fprintf fmt " | Returns  : 'a CI.typ   -> 'a return fn@\n";

@@ -107,7 +107,7 @@ struct
     | None -> ()
     | Some primname -> fprintf fmt "%S@ " primname
 
-  let attrs fmt { float; noalloc } =
+  let attrs _fmt { float = _; noalloc = _ } =
     begin 
     (* TODO: float support not yet implemented *)
     (* if float then pp_print_string fmt "\"float\""; *)
@@ -238,7 +238,7 @@ let rec ml_typ_of_return_typ : type a. a typ -> ml_type =
   | Abstract _  -> managed_buffer
   | Pointer _   -> voidp
   | Funptr _    -> voidp
-  | View { ty } -> ml_typ_of_return_typ ty
+  | View { ty; _ } -> ml_typ_of_return_typ ty
   | Array _    as a -> internal_error
     "Unexpected array type in the return type: %s" (Ctypes.string_of_typ a)
   | Bigarray _ as a -> internal_error
@@ -249,6 +249,8 @@ let rec ml_typ_of_return_typ : type a. a typ -> ml_type =
     "cstubs does not support OCaml bytes values as return values"
   | OCaml FloatArray -> Ctypes_static.unsupported
     "cstubs does not support OCaml float arrays as return values"
+  | Buffer _ -> Ctypes_static.unsupported
+  "cstubs does not support OCaml bytes values as return values"
 
 let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
   | Void -> `Ident (path_of_string "unit")
@@ -258,7 +260,7 @@ let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
   | Struct _    -> fatptr
   | Union _     -> fatptr
   | Abstract _  -> fatptr
-  | View { ty } -> ml_typ_of_arg_typ ty
+  | View { ty; _ } -> ml_typ_of_arg_typ ty
   | Array _    as a -> internal_error
     "Unexpected array in an argument type: %s" (Ctypes.string_of_typ a)
   | Bigarray _ as a -> internal_error
@@ -273,6 +275,9 @@ let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
     `Appl (path_of_string "CI.ocaml",
            [`Appl (path_of_string "array",
                    [`Ident (path_of_string "float")])])
+  | Buffer _ ->
+    `Appl (path_of_string "CI.ocaml",
+            [`Ident (path_of_string "bytes")])
 
 type polarity = In | Out
 
@@ -407,7 +412,7 @@ let rec pattern_and_exp_of_typ : type a. concurrency:concurrency_policy -> errno
       let pat = `As (static_con "Union" [`Underscore], x) in
       (pat, Some (map_result ~concurrency ~errno (`MakeStructured x) e), binds)
     end
-  | View { ty } ->
+  | View { ty; _ } ->
     begin match pol  with
     | In ->
       let x = fresh_var () in
@@ -449,9 +454,16 @@ let rec pattern_and_exp_of_typ : type a. concurrency:concurrency_policy -> errno
   | Bigarray _ as ty -> internal_error
     "Unexpected bigarray type encountered during ML code generation: %s"
     (Ctypes.string_of_typ ty)
+  | Buffer _ -> (* TODO: この辺を変更すれば良さそう？ *)
+    begin match pol with
+    | In -> (static_con "OCaml" [static_con "Bytes" []], None, binds)
+    | Out -> Ctypes_static.unsupported
+    "cstubs does not support OCaml bytes values as return values"
+    end
+
 
 (* Build a pattern (without variables) that matches the argument *)
-let rec pattern_of_typ : type a. a typ -> ml_pat = function
+let rec pattern_of_typ : type a. a typ -> ml_pat = function (* MEMO: これなに？ *)
     Void -> static_con "Void" []
   | Primitive p ->
     let id = Cstubs_public_name.constructor_cident_of_prim ~module_name:"CI" p in
@@ -464,7 +476,7 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
     static_con "Struct" [`Underscore]
   | Union _ ->
     static_con "Union" [`Underscore]
-  | View { ty } ->
+  | View { ty; _ } ->
     static_con "View"
       [`Record ([path_of_string "CI.ty", pattern_of_typ ty], `Etc)]
   | Array (_, _) ->
@@ -484,6 +496,9 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
     internal_error
       "Unexpected abstract type encountered during ML code generation: %s"
       (Ctypes.string_of_typ ty)
+  | Buffer _ -> 
+    Ctypes_static.unsupported
+    "cstubs does not support OCaml bytes values as global values"
 
 type wrapper_state = {
   pat: ml_pat;
@@ -531,7 +546,7 @@ let rec wrapper_body : type a. concurrency:concurrency_policy -> errno:errno_pol
       { exp; args = x :: args; trivial; binds;
         pat = local_con "Function" [fpat; tpat] }
     | fpat, Some exp', binds ->
-      let { exp; args = xs; trivial; pat = tpat; binds } =
+      let { exp; args = xs; trivial = _; pat = tpat; binds } =
         wrapper_body ~concurrency ~errno
           t (`Appl (exp, exp')) pol binds in
       { exp; args = x :: xs; trivial = false; binds;
@@ -570,11 +585,11 @@ let wrapper : type a. concurrency:concurrency_policy -> errno:errno_policy ->
   fun ~concurrency ~errno id fn f pol ->
     let p = wrapper_body ~concurrency ~errno fn (`Ident (path_of_string f)) pol [] in
     match p, concurrency with
-      { trivial = true; pat; binds }, #non_lwt ->
+      { trivial = true; pat; binds; _ }, #non_lwt ->
       (pat, let_bind binds (run_exp ~concurrency (`Ident id)))
-    | { exp; args; pat; binds }, #non_lwt ->
+    | { exp; args; pat; binds; _ }, #non_lwt ->
       (pat, `Fun (args, let_bind binds exp))
-    | { trivial = true; pat; args; binds }, #lwt ->
+    | { trivial = true; pat; args; binds; _ }, #lwt ->
       let exp : ml_exp = List.fold_left (fun f p -> `Appl (f, `Ident (path_of_string p))) (`Ident id) args in
       (pat, `Fun (args,
                   let_bind binds
@@ -584,7 +599,7 @@ let wrapper : type a. concurrency:concurrency_policy -> errno:errno_policy ->
                                    return_result ~args:(args
                                                         @ pats_bound_vars
                                                             (List.map fst binds)))))))
-    | { exp; args; pat; binds }, #lwt ->
+    | { exp; args; pat; binds; _ }, #lwt ->
       (pat, `Fun (args,
                   let_bind binds
                     (`Appl (`Ident box_lwt,

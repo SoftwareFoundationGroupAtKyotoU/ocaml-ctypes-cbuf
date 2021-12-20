@@ -57,6 +57,7 @@ type _ alloc =
 | Alloc_array : _ carray alloc
 | Alloc_bigarray : (_, 'a, _) Ctypes_bigarray.t -> 'a alloc
 | Alloc_view : ('a, 'b) view * 'b alloc -> 'a alloc
+| Alloc_buffer : cbuffer alloc
 
 type 'a allocation = [ `Noalloc of 'a noalloc | `Alloc of 'a alloc ]
 
@@ -109,6 +110,7 @@ let rec allocation : type a. a typ -> a allocation = function
  | Array _ -> `Alloc Alloc_array
  | Bigarray ba -> `Alloc (Alloc_bigarray ba)
  | OCaml _ -> `Alloc Alloc_pointer
+ | Buffer _ -> `Alloc Alloc_buffer
 
 let rec may_allocate : type a. a fn -> bool = function
   | Returns t ->

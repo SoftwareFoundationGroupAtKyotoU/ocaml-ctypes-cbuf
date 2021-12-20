@@ -20,13 +20,13 @@ let rec format_typ' : type a. a typ ->
     | Primitive p ->
       let name = Ctypes_primitives.name p in
       fprintf fmt "%s%t" name (k `nonarray)
-    | View { format_typ = Some format } ->
+    | View { format_typ = Some format; _ } ->
       format (k `nonarray) fmt
-    | View { ty } ->
+    | View { ty; _ } ->
       format_typ' ty k context fmt
-    | Abstract { aname } ->
+    | Abstract { aname; _ } ->
       fprintf fmt "%s%t" aname (k `nonarray)
-    | Struct { tag = "" ; fields } ->
+    | Struct { tag = "" ; fields; _ } ->
       fprintf fmt "struct {@;<1 2>@[";
       format_fields fields fmt;
       fprintf fmt "@]@;}%t" (k `nonarray)
@@ -40,7 +40,7 @@ let rec format_typ' : type a. a typ ->
           end
         | _ -> fprintf fmt "struct %s%t" tag (k `nonarray)
       end
-    | Union { utag = ""; ufields } ->
+    | Union { utag = ""; ufields; _ } ->
       fprintf fmt "union {@;<1 2>@[";
       format_fields ufields fmt;
       fprintf fmt "@]@;}%t" (k `nonarray)
@@ -76,12 +76,13 @@ let rec format_typ' : type a. a typ ->
     | OCaml String -> format_typ' (ptr char) k context fmt
     | OCaml Bytes -> format_typ' (ptr uchar) k context fmt
     | OCaml FloatArray -> format_typ' (ptr double) k context fmt
+    | Buffer _ -> format_typ' (ptr uchar) k context fmt
 
 and format_fields : type a. a boxed_field list -> Format.formatter -> unit =
   fun fields fmt ->
   let open Format in
       List.iteri
-        (fun i (BoxedField {ftype=t; fname}) ->
+        (fun _i (BoxedField {ftype=t; fname; _}) ->
           fprintf fmt "@[";
           format_typ' t (fun _ fmt -> fprintf fmt " %s" fname) `nonarray fmt;
           fprintf fmt "@];@;")
@@ -105,7 +106,7 @@ and format_fn' : 'a. 'a fn ->
       | Function (p, fn) -> let ps, r = gather fn in BoxedType p :: ps, r in
   fun fn k fmt ->
     let ps, BoxedType r = gather fn in
-    format_typ' r (fun context fmt -> format_parameter_list ps k fmt)
+    format_typ' r (fun _context fmt -> format_parameter_list ps k fmt)
       `nonarray fmt
 
 let format_name ?name fmt =
@@ -116,7 +117,7 @@ let format_name ?name fmt =
 let format_typ : ?name:string -> Format.formatter -> 'a typ -> unit
   = fun ?name fmt typ ->
     Format.fprintf fmt "@[";
-    format_typ' typ (fun context -> format_name ?name) `toplevel fmt;
+    format_typ' typ (fun _context -> format_name ?name) `toplevel fmt;
     Format.fprintf fmt "@]"
 
 let format_fn : ?name:string -> Format.formatter -> 'a fn -> unit

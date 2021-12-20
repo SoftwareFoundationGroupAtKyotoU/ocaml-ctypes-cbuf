@@ -82,7 +82,7 @@ struct
     | `Int _ -> Ty sint
     | `Local (_, ty) -> ty
     | `Cast (Ty ty, _) -> Ty ty
-    | `Addr (`Global { typ = Ty ty }) -> Ty (Pointer ty)
+    | `Addr (`Global { typ = Ty ty; _ }) -> Ty (Pointer ty)
     | `Addr (`Local (_,  Ty ty)) -> Ty (Pointer ty)
 
   let camlop : camlop -> ty = function
@@ -93,8 +93,8 @@ struct
   let rec ceff : ceff -> ty = function
     | #cexp as e -> cexp e
     | #camlop as o -> camlop o
-    | `Global { typ } -> typ
-    | `App ({ fn = Fn f }, _) -> return_type f
+    | `Global { typ ; _} -> typ
+    | `App ({ fn = Fn f; _}, _) -> return_type f
     | `Index (e, _) -> reference_ceff e
     | `Deref e -> reference_ceff (e :> ceff)
     | `DerefField (e, f) -> field_ceff (e :> ceff) f
@@ -110,7 +110,7 @@ struct
   and field_ceff : ceff -> fieldname -> ty =
     fun e f ->
       begin match ceff e with
-          Ty (Pointer (Struct { fields } as s)) -> lookup_field f s fields
+          Ty (Pointer (Struct { fields; _ } as s)) -> lookup_field f s fields
         | Ty t -> Cstubs_errors.internal_error
           "accessing a field %s in an expression of type %s, which is not a pointer-to-struct type"
           f (Ctypes.string_of_typ t)
@@ -120,7 +120,7 @@ struct
         [] -> Cstubs_errors.internal_error
                 "field %s not found in struct %s" f
                 (Ctypes.string_of_typ ty)
-      | BoxedField { ftype; fname } :: _ when fname = f -> Ty ftype
+      | BoxedField { ftype; fname; _ } :: _ when fname = f -> Ty ftype
       | _ :: fields -> lookup_field f ty fields
 
   let rec ccomp : ccomp -> ty = function

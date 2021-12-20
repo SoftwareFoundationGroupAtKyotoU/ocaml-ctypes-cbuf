@@ -132,24 +132,25 @@ struct
     fun ty ~orig x -> match ty with
     | Void -> None
     | Primitive p ->
-      let { fn = Fn fn } as prj = prim_prj p in
+      let { fn = Fn fn; _ } as prj = prim_prj p in
       let rt = return_type fn in
       Some (cast ~from:rt ~into:(Ty (Primitive p)) (`App (prj, [x])))
     | Pointer _ -> Some (of_fatptr x :> ccomp)
     | Funptr _ -> Some (of_fatptr x :> ccomp)
-    | Struct s ->
+    | Struct _s ->
       Some (((of_fatptr x :> ccomp), ptr void) >>= fun y ->
             `Deref (`Cast (Ty (ptr orig), y)))
-    | Union u ->
+    | Union _u ->
       Some (((of_fatptr x :> ccomp), ptr void) >>= fun y ->
             `Deref (`Cast (Ty (ptr orig), y)))
     | Abstract _ -> report_unpassable "values of abstract type"
-    | View { ty } -> prj ty ~orig x
+    | View { ty; _ } -> prj ty ~orig x
     | Array _ -> report_unpassable "arrays"
     | Bigarray _ -> report_unpassable "bigarrays"
     | OCaml String -> Some (string_to_ptr x)
     | OCaml Bytes -> Some (bytes_to_ptr x)
     | OCaml FloatArray -> Some (float_array_to_ptr x)
+    | Buffer _ -> Some (bytes_to_ptr x)
 
   let prj ty x = prj ty ~orig:ty x
 
@@ -159,13 +160,14 @@ struct
     | Primitive p -> `App (prim_inj p, [`Cast (Ty (Primitive p), (x :> cexp))])
     | Pointer _ -> from_ptr (x:> cexp)
     | Funptr _ -> from_ptr (x:> cexp)
-    | Struct s -> `App (copy_bytes, [`Addr (x :> cvar); `Int (Signed.SInt.of_int (sizeof ty))])
-    | Union u -> `App (copy_bytes, [`Addr (x :> cvar); `Int (Signed.SInt.of_int (sizeof ty))])
+    | Struct _s -> `App (copy_bytes, [`Addr (x :> cvar); `Int (Signed.SInt.of_int (sizeof ty))])
+    | Union _u -> `App (copy_bytes, [`Addr (x :> cvar); `Int (Signed.SInt.of_int (sizeof ty))])
     | Abstract _ -> report_unpassable "values of abstract type"
-    | View { ty } -> inj ty x
+    | View { ty; _ } -> inj ty x
     | Array _ -> report_unpassable "arrays"
     | Bigarray _ -> report_unpassable "bigarrays"
     | OCaml _ -> report_unpassable "ocaml references as return values"
+    | Buffer _ -> report_unpassable "ocaml references as return values"
 
   type _ fn =
   | Returns  : 'a typ   -> 'a fn
@@ -176,7 +178,7 @@ struct
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
 
   let rec value_params : type a. a fn -> (string * ty) list = function
-    | Returns t -> []
+    | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
 
   let fundec : type a. string -> a Ctypes.fn -> cfundec =
@@ -361,7 +363,7 @@ struct
     | Primitive p -> `App (prim_prj p, [x])
     | Pointer _ -> Generate_C.of_fatptr x
     | Funptr _ -> Generate_C.of_fatptr x
-    | View { ty } -> prj ty ~orig x
+    | View { ty; _ } -> prj ty ~orig x
     | t -> unsupported t
 
   let prj ty x = prj ty ~orig:ty x
@@ -372,7 +374,7 @@ struct
   let structure_type stub_name = 
     structure (sprintf "job_%s" stub_name)
 
-  let structure (type r) ~errno ~stub_name fmt fn args (result : r typ) =
+  let structure (type r) ~errno ~stub_name fmt _fn args (result : r typ) =
     let open Ctypes in
     let s = structure_type stub_name in
     let _ : (_,_) field = field s "job" lwt_unix_job in
@@ -425,7 +427,7 @@ struct
                   body [] args,
                   `Static))
 
-  let result (type r) ~errno ~stub_name fmt fn (result : r typ) =
+  let result (type r) ~errno ~stub_name fmt _fn (result : r typ) =
     begin
       fprintf fmt "@[static@ value@ result_%s@;@[(struct@ job_%s@ *j)@]@]@;@[<2>{@\n"
         stub_name stub_name;
@@ -455,7 +457,7 @@ struct
       fprintf fmt "}@\n";
     end
 
-  let stub ~errno ~stub_name fmt fn args =
+  let stub ~errno ~stub_name fmt _fn args =
     begin
       fprintf fmt "@[value@ %s@;@[(%s)@]@]@;@[<2>{@\n"
         stub_name
@@ -480,7 +482,8 @@ struct
       fprintf fmt "}@\n";
     end
 
-  let byte_stub ~errno ~stub_name fmt fn args =
+  let byte_stub ~errno ~stub_name fmt _fn args =
+    let _ = errno in
     begin
       let nargs = List.length args in
       fprintf fmt "@[value@ %s_byte%d@;@[(value *argv, int argc)@]@]@;@[<2>{@\n"

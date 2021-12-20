@@ -173,7 +173,7 @@ let primitive_format_string : type a. a Ctypes_primitive_types.prim -> string =
 let rec ml_pat_and_exp_of_typ : type a. a typ -> string * string =
   fun ty -> 
     match ty with
-    | Ctypes_static.View { Ctypes_static.ty } ->
+    | Ctypes_static.View { Ctypes_static.ty; _ } ->
       let p, e = ml_pat_and_exp_of_typ ty in
       let x = Cstubs_c_language.fresh_var ~prefix:"read" () in
       let p' = Printf.sprintf "Ctypes_static.View { Ctypes_static.read = %s; ty = %s }" x p
@@ -255,13 +255,13 @@ let gen_c () =
       open Ctypes_static
       let rec field' : type a s r. string -> s typ -> string -> a typ -> (a, r) field =
         fun structname s fname ftype -> match s with 
-        | Struct { tag } ->
+        | Struct { tag; _ } ->
           fields := (`Struct (tag, structname), fname) :: !fields;
           { ftype; foffset = -1; fname}
-        | Union { utag } ->
+        | Union { utag; _ } ->
           fields := (`Union (utag, structname), fname) :: !fields;
           { ftype; foffset = -1; fname}
-        | View { ty } -> 
+        | View { ty; _ } -> 
           field' structname ty fname ftype
         | _ -> raise (Unsupported "Adding a field to non-structured type")
 
@@ -269,11 +269,11 @@ let gen_c () =
 
       let rec seal' : type s. string -> s typ -> unit =
         fun structname -> function
-        | Struct { tag } ->
+        | Struct { tag; _ } ->
           structures := `Struct (tag, structname) :: !structures
-        | Union { utag } ->
+        | Union { utag; _ } ->
           structures := `Union (utag, structname) :: !structures
-        | View { ty } ->
+        | View { ty; _ } ->
            seal' structname ty
         | _ -> raise (Unsupported "Sealing a field to non-structured type")
 
@@ -281,7 +281,8 @@ let gen_c () =
 
       type _ const = unit
       let constant name ty  = consts := (name, Ctypes_static.BoxedType ty) :: !consts
-      let enum name ?(typedef=false) ?unexpected alist =
+      let enum name ?(typedef=false) ?unexpected _alist =
+        let _ = unexpected in
         let () = enums := (name, typedef) :: !enums in
         let format_typ k fmt = Format.fprintf fmt "%s%s%t"
           (if typedef then "" else "enum ") name k in
