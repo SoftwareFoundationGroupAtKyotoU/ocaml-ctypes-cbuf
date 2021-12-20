@@ -45,6 +45,7 @@ type _ typ =
   | Bigarray        : (_, 'a, _) Ctypes_bigarray.t
                                          -> 'a typ
   | OCaml           : 'a ocaml_type      -> 'a ocaml typ
+  | Buffer          : int                -> cbuffer typ
 and 'a carray = { astart : 'a ptr; alength : int }
 and ('a, 'kind) structured = { structured : ('a, 'kind) structured ptr } [@@unboxed]
 and 'a union = ('a, [`Union]) structured
@@ -55,6 +56,7 @@ and (_, _) pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
+and cbuffer = { length : int }
 and 'a static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = {
@@ -121,50 +123,53 @@ type boxed_typ = BoxedType : 'a typ -> boxed_typ
 let rec sizeof : type a. a typ -> int = function
     Void                           -> raise IncompleteType
   | Primitive p                    -> Ctypes_primitives.sizeof p
-  | Struct { spec = Incomplete _ } -> raise IncompleteType
+  | Struct { spec = Incomplete _; _ } -> raise IncompleteType
   | Struct { spec = Complete
-      { size } }                   -> size
-  | Union { uspec = None }         -> raise IncompleteType
-  | Union { uspec = Some { size } }
+      { size; _ }; _ }                   -> size
+  | Union { uspec = None; _ }         -> raise IncompleteType
+  | Union { uspec = Some { size; _ }; _ }
                                    -> size
   | Array (t, i)                   -> i * sizeof t
   | Bigarray ba                    -> Ctypes_bigarray.sizeof ba
-  | Abstract { asize }             -> asize
+  | Abstract { asize; _ }             -> asize
   | Pointer _                      -> Ctypes_primitives.pointer_size
   | Funptr _                       -> Ctypes_primitives.pointer_size
   | OCaml _                        -> raise IncompleteType
-  | View { ty }                    -> sizeof ty
+  | View { ty; _ }                    -> sizeof ty
+  | Buffer i                       -> i
 
 let rec alignment : type a. a typ -> int = function
     Void                             -> raise IncompleteType
   | Primitive p                      -> Ctypes_primitives.alignment p
-  | Struct { spec = Incomplete _ }   -> raise IncompleteType
+  | Struct { spec = Incomplete _; _ }   -> raise IncompleteType
   | Struct { spec = Complete
-      { align } }                    -> align
-  | Union { uspec = None }           -> raise IncompleteType
-  | Union { uspec = Some { align } } -> align
+      { align; _ }; _ }                    -> align
+  | Union { uspec = None; _ }           -> raise IncompleteType
+  | Union { uspec = Some { align; _ }; _ } -> align
   | Array (t, _)                     -> alignment t
   | Bigarray ba                      -> Ctypes_bigarray.alignment ba
-  | Abstract { aalignment }          -> aalignment
+  | Abstract { aalignment; _ }          -> aalignment
   | Pointer _                        -> Ctypes_primitives.pointer_alignment
   | Funptr _                         -> Ctypes_primitives.pointer_alignment
   | OCaml _                          -> raise IncompleteType
-  | View { ty }                      -> alignment ty
+  | View { ty; _ }                      -> alignment ty
+  | Buffer _                         -> raise IncompleteType
 
 let rec passable : type a. a typ -> bool = function
     Void                           -> true
   | Primitive _                    -> true
-  | Struct { spec = Incomplete _ } -> raise IncompleteType
-  | Struct { spec = Complete _ }   -> true
-  | Union  { uspec = None }        -> raise IncompleteType
-  | Union  { uspec = Some _ }      -> true
+  | Struct { spec = Incomplete _; _ } -> raise IncompleteType
+  | Struct { spec = Complete _; _ }   -> true
+  | Union  { uspec = None; _ }        -> raise IncompleteType
+  | Union  { uspec = Some _; _ }      -> true
   | Array _                        -> false
   | Bigarray _                     -> false
   | Pointer _                      -> true
   | Funptr _                       -> true
   | Abstract _                     -> false
   | OCaml _                        -> true
-  | View { ty }                    -> passable ty
+  | View { ty; _ }                    -> passable ty
+  | Buffer _                       -> true
 
 (* Whether a value resides in OCaml-managed memory.
    Values that reside in OCaml memory cannot be accessed
@@ -180,7 +185,8 @@ let rec ocaml_value : type a. a typ -> bool = function
   | Funptr _    -> false
   | Abstract _  -> false
   | OCaml _     -> true
-  | View { ty } -> ocaml_value ty
+  | View { ty; _ } -> ocaml_value ty
+  | Buffer _    -> true
 
 let rec has_ocaml_argument : type a. a fn -> bool = function
     Returns _ -> false
@@ -268,9 +274,9 @@ let structure tag =
 
 let union utag = Union { utag; uspec = None; ufields = [] }
 
-let offsetof { foffset } = foffset
-let field_type { ftype } = ftype
-let field_name { fname } = fname
+let offsetof { foffset; _ } = foffset
+let field_type { ftype; _ } = ftype
+let field_name { fname; _ } = fname
 
 (* This corresponds to the enum in ctypes_primitives.h *)
 type arithmetic =

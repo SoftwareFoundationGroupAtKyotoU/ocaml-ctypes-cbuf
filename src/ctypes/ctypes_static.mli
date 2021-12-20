@@ -39,6 +39,7 @@ type _ typ =
   | Bigarray        : (_, 'a, _) Ctypes_bigarray.t
                                          -> 'a typ
   | OCaml           : 'a ocaml_type      -> 'a ocaml typ
+  | Buffer          : int                -> cbuffer typ
 and 'a carray = { astart : 'a ptr; alength : int }
 and ('a, 'kind) structured = { structured : ('a, 'kind) structured ptr } [@@unboxed]
 and 'a union = ('a, [`Union]) structured
@@ -49,6 +50,7 @@ and (_, _) pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
+and cbuffer = { length : int }
 and 'a static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = {
