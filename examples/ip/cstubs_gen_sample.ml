@@ -14,11 +14,14 @@ let (@->) f p = Function (f, p)
 let foreign : type a b. string -> (a -> b) fn -> (a -> b) =
   fun name t -> match t, name with
 | Function
-    (CI.View {CI.ty = CI.Pointer _; write = x2; _},
-     Function (CI.OCaml CI.Bytes, Returns (CI.Primitive CI.Int))),
+    (CI.View {CI.ty = CI.Pointer _; write = x2; _}, (* string *)
+     Function (CI.Buffer 4, (* buffer 4 *)
+     Returns (CI.Primitive CI.Int))), (* int *)
   "ip_addr_pton" ->
-  (fun x1 x5 ->
-    let CI.CPointer x4 = x2 x1 in let x3 = x4 in caml__1_ip_addr_pton x3 x5)
+  (fun x1 _ ->
+    let buf = Bytes.create 10 in
+    let CI.CPointer x4 = x2 x1 in let x3 = x4 in 
+    caml__1_ip_addr_pton x3 (Ctypes.ocaml_bytes_start buf))
 | _, s ->  Printf.ksprintf failwith "No match for %s" s
 
 
