@@ -227,6 +227,7 @@ let ullong = Primitive Ctypes_primitive_types.Ullong
 let array i t = Array (t, i)
 let ocaml_string = OCaml String
 let ocaml_bytes = OCaml Bytes
+let buffer i = Buffer i
 let ocaml_float_array = OCaml FloatArray
 let ptr t = Pointer t
 let ( @->) f t =

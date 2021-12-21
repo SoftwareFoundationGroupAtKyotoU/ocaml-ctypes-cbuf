@@ -152,6 +152,7 @@ val ullong : Unsigned.ullong typ
 val array : int -> 'a typ -> 'a carray typ
 val ocaml_string : string ocaml typ
 val ocaml_bytes : bytes ocaml typ
+val buffer : int -> cbuffer typ
 val ocaml_float_array : float array ocaml typ
 val ptr : 'a typ -> 'a ptr typ
 val ( @-> ) : 'a typ -> 'b fn -> ('a -> 'b) fn
