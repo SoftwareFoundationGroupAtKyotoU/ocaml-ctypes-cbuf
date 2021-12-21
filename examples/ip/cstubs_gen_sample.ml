@@ -3,6 +3,8 @@ module CI = Cstubs_internals
 external caml__1_ip_addr_pton : _ CI.fatptr -> bytes CI.ocaml -> int
   = "caml__1_ip_addr_pton" 
 
+external caml__2_int_as_buffer : _ CI.fatptr -> int = "caml__2_int_as_buffer"
+
 type 'a result = 'a
 type 'a return = 'a
 type 'a fn =
@@ -13,6 +15,8 @@ let returning t = Returns t
 let (@->) f p = Function (f, p)
 let foreign : type a b. string -> (a -> b) fn -> (a -> b) =
   fun name t -> match t, name with
+| Function (CI.Pointer _, Returns (CI.Primitive CI.Int)), "int_as_buffer" ->
+  (fun x1 -> let CI.CPointer x2 = x1 in caml__2_int_as_buffer x2)
 | Function
     (CI.View {CI.ty = CI.Pointer _; write = x2; _}, (* string *)
      Function (CI.Buffer 4, (* buffer 4 *)

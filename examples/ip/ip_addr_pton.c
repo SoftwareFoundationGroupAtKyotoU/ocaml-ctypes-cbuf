@@ -24,3 +24,8 @@ int ip_addr_pton(const char *p, ip_addr_t *n) {
   }
   return 0;
 }
+
+int int_as_buffer(int *i) {
+  *i = 10;
+  return 0;
+}
