@@ -18,6 +18,7 @@ let is_float_primitive : type a. a typ -> bool =
 let rec float : type a. a fn -> bool = function
   | Returns t -> is_float_primitive t
   | Function (f, t) -> is_float_primitive f && float t
+  | Buffers _ -> raise (Unsupported "not implemented!")
 
 (* A value of type 'a noalloc says that reading a value of type 'a
    will not cause an OCaml allocation in C code. *)
@@ -57,7 +58,7 @@ type _ alloc =
 | Alloc_array : _ carray alloc
 | Alloc_bigarray : (_, 'a, _) Ctypes_bigarray.t -> 'a alloc
 | Alloc_view : ('a, 'b) view * 'b alloc -> 'a alloc
-| Alloc_buffer : cbuffer alloc
+| Alloc_buffer : _ cbuffer alloc (* TODO: implement this *)
 
 type 'a allocation = [ `Noalloc of 'a noalloc | `Alloc of 'a alloc ]
 
@@ -119,3 +120,4 @@ let rec may_allocate : type a. a fn -> bool = function
     | `Alloc _ -> true
     end
   | Function (_, t) -> may_allocate t
+  | Buffers _ -> raise (Unsupported "not implemented")

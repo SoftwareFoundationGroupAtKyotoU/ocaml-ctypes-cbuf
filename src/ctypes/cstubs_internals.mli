@@ -40,7 +40,7 @@ type 'a typ = 'a Ctypes_static.typ =
   | Array           : 'a typ * int              -> 'a Ctypes_static.carray typ
   | Bigarray        : (_, 'a, _) Ctypes_bigarray.t -> 'a typ
   | OCaml           : 'a ocaml_type             -> 'a ocaml typ
-  | Buffer          : int                       -> Ctypes_static.cbuffer typ
+  | Buffer          : int * 'a typ              -> 'a Ctypes_static.cbuffer typ
 and ('a, 'b) pointer = ('a, 'b) Ctypes_static.pointer =
   CPointer : (Obj.t option,'a typ) Ctypes_ptr.Fat.t -> ('a, [`C]) pointer
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
@@ -59,6 +59,7 @@ and ('a, 'b) view = ('a, 'b) Ctypes_static.view = {
 type 'a fn = 'a Ctypes_static.fn =
   | Returns  : 'a typ   -> 'a fn
   | Function : 'a typ * 'b fn  -> ('a -> 'b) fn
+  | Buffers  : 'a Ctypes_static.buffers -> 'a fn
 
 type 'a prim = 'a Ctypes_primitive_types.prim =
   Char : char prim

@@ -39,7 +39,7 @@ type _ typ =
   | Bigarray        : (_, 'a, _) Ctypes_bigarray.t
                                          -> 'a typ
   | OCaml           : 'a ocaml_type      -> 'a ocaml typ
-  | Buffer          : int                -> cbuffer typ
+  | Buffer          : int * 'a typ       -> 'a cbuffer typ
 and 'a carray = { astart : 'a ptr; alength : int }
 and ('a, 'kind) structured = { structured : ('a, 'kind) structured ptr } [@@unboxed]
 and 'a union = ('a, [`Union]) structured
@@ -50,7 +50,10 @@ and (_, _) pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
-and cbuffer = { length : int }
+and 'a cbuffer = { typ : 'a; length : int }
+and 'a buffers =
+  | LastBuf : 'a cbuffer typ -> 'a buffers
+  | ConBuf  : 'a cbuffer typ * 'b buffers -> ('a -> 'b) buffers
 and 'a static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = {
@@ -79,6 +82,7 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns  : 'a typ   -> 'a fn
   | Function : 'a typ * 'b fn  -> ('a -> 'b) fn
+  | Buffers  : 'a buffers -> 'a fn
 
 type _ bigarray_class =
   Genarray :
@@ -152,7 +156,7 @@ val ullong : Unsigned.ullong typ
 val array : int -> 'a typ -> 'a carray typ
 val ocaml_string : string ocaml typ
 val ocaml_bytes : bytes ocaml typ
-val buffer : int -> cbuffer typ
+val buffer : int -> 'a typ -> 'a cbuffer typ
 val ocaml_float_array : float array ocaml typ
 val ptr : 'a typ -> 'a ptr typ
 val ( @-> ) : 'a typ -> 'b fn -> ('a -> 'b) fn
@@ -178,6 +182,7 @@ val fortran_bigarray : < ba_repr : 'c;
   'b -> ('a, 'c) Bigarray_compat.kind -> 'd typ
 val returning : 'a typ -> 'a fn
 val static_funptr : 'a fn -> 'a static_funptr typ
+val retbuf : 'a buffers -> 'a fn
 val structure : string -> 'a structure typ
 val union : string -> 'a union typ
 val offsetof : ('a, 'b) field -> int

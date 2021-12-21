@@ -212,8 +212,8 @@ sig
   val ocaml_bytes : bytes Ctypes_static.ocaml typ
   (** Value representing the directly mapped storage of an OCaml byte array. *)
 
-  val buffer : int -> Ctypes_static.cbuffer typ
-  (** Value representing the directly mapped storage of an OCaml byte array with size. *)
+  val buffer : int -> 'a typ -> 'a Ctypes_static.cbuffer typ
+  (* TODO: move buffer definition *)
 
   (** {3 Array types} *)
 

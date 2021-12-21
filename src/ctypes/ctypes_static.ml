@@ -45,7 +45,7 @@ type _ typ =
   | Bigarray        : (_, 'a, _) Ctypes_bigarray.t
                                          -> 'a typ
   | OCaml           : 'a ocaml_type      -> 'a ocaml typ
-  | Buffer          : int                -> cbuffer typ
+  | Buffer          : int * 'a typ       -> 'a cbuffer typ
 and 'a carray = { astart : 'a ptr; alength : int }
 and ('a, 'kind) structured = { structured : ('a, 'kind) structured ptr } [@@unboxed]
 and 'a union = ('a, [`Union]) structured
@@ -56,7 +56,10 @@ and (_, _) pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
-and cbuffer = { length : int }
+and 'a cbuffer = { typ : 'a; length : int }
+and 'a buffers =
+  | LastBuf : 'a cbuffer typ -> 'a buffers
+  | ConBuf  : 'a cbuffer typ * 'b buffers -> ('a -> 'b) buffers
 and 'a static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = {
@@ -87,6 +90,7 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns  : 'a typ   -> 'a fn
   | Function : 'a typ * 'b fn  -> ('a -> 'b) fn
+  | Buffers  : 'a buffers -> 'a fn
 
 type _ bigarray_class =
   Genarray :
@@ -135,8 +139,8 @@ let rec sizeof : type a. a typ -> int = function
   | Pointer _                      -> Ctypes_primitives.pointer_size
   | Funptr _                       -> Ctypes_primitives.pointer_size
   | OCaml _                        -> raise IncompleteType
-  | View { ty; _ }                    -> sizeof ty
-  | Buffer i                       -> i
+  | View { ty; _ }                 -> sizeof ty
+  | Buffer (i, ty)                 -> sizeof ty * i
 
 let rec alignment : type a. a typ -> int = function
     Void                             -> raise IncompleteType
@@ -192,6 +196,7 @@ let rec has_ocaml_argument : type a. a fn -> bool = function
     Returns _ -> false
   | Function (t, _) when ocaml_value t -> true
   | Function (_, t) -> has_ocaml_argument t
+  | Buffers _ -> raise (Unsupported "not implemented!")
 
 let void = Void
 let char = Primitive Ctypes_primitive_types.Char
@@ -227,7 +232,7 @@ let ullong = Primitive Ctypes_primitive_types.Ullong
 let array i t = Array (t, i)
 let ocaml_string = OCaml String
 let ocaml_bytes = OCaml Bytes
-let buffer i = Buffer i
+let buffer i ty = Buffer (i, ty)
 let ocaml_float_array = OCaml FloatArray
 let ptr t = Pointer t
 let ( @->) f t =
@@ -269,6 +274,8 @@ let returning v =
   else
     Returns v
 let static_funptr fn = Funptr fn
+
+let retbuf : 'a buffers -> 'a fn = fun buf -> Buffers buf
 
 let structure tag =
   Struct { spec = Incomplete { isize = 0 }; tag; fields = [] }
