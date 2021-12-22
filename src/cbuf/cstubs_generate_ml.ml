@@ -307,6 +307,8 @@ let rec ml_external_type_of_fn :
     | Function (f, t), _, _ ->
       let `Prim (l, t) = ml_external_type_of_fn ~concurrency ~errno t polarity in
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
+    | Buffers _, _, _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
+
 
 let var_counter = ref 0
 let fresh_var () =
@@ -552,6 +554,8 @@ let rec wrapper_body : type a. concurrency:concurrency_policy -> errno:errno_pol
       { exp; args = x :: xs; trivial = false; binds;
         pat = local_con "Function" [fpat; tpat] }
     end
+  | Buffers _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
+
 
 let lwt_bind = Ctypes_path.path_of_string "Lwt.bind"
 let lwt_return = Ctypes_path.path_of_string "Lwt.return"

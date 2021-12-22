@@ -69,11 +69,13 @@ type cfundef = [ `Function of cfundec * ccomp * storage_class ]
 let rec return_type : type a. a fn -> ty = function
   | Function (_, f) -> return_type f
   | Returns t -> Ty t
+  | Buffers _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
 
 let args : type a. a fn -> (string * ty) list = fun fn ->
   let rec loop : type a. a Ctypes.fn -> (string * ty) list = function
     | Ctypes_static.Function (ty, fn) -> (fresh_var (), Ty ty) :: loop fn
     | Ctypes_static.Returns _ -> []
+    | Buffers _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
   in loop fn
 
 module Type_C =

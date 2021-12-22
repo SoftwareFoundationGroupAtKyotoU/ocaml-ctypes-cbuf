@@ -176,6 +176,7 @@ struct
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
+    | Ctypes_static.Buffers _ -> raise (Unsupported "not implemented!")
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
@@ -508,6 +509,7 @@ struct
           Function (Void, f) -> aux f args
         | Function (t, f) -> aux f ((BoxedType t, var "arg") :: args)
         | Returns t -> List.rev args, BoxedType t
+        | Buffers _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
      in aux fn []  
 
   let fn ~errno ~cname ~stub_name fmt fn =

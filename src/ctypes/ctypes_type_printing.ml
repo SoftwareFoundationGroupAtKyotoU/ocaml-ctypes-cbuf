@@ -103,7 +103,9 @@ and format_fn' : 'a. 'a fn ->
     function
       | Returns ty -> [], BoxedType ty
       | Function (Void, fn) -> gather fn
-      | Function (p, fn) -> let ps, r = gather fn in BoxedType p :: ps, r in
+      | Function (p, fn) -> let ps, r = gather fn in BoxedType p :: ps, r
+      | Buffers _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
+    in
   fun fn k fmt ->
     let ps, BoxedType r = gather fn in
     format_typ' r (fun _context fmt -> format_parameter_list ps k fmt)
