@@ -27,6 +27,7 @@ sig
   type 'a return
   val (@->) : 'a typ -> 'b fn -> ('a -> 'b) fn
   val returning : 'a typ -> 'a return fn
+  val retbuf : 'a buffers -> 'a return fn
 
   type 'a result
   val foreign : string -> ('a -> 'b) fn -> ('a -> 'b) result

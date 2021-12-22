@@ -50,10 +50,10 @@ and (_, _) pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
-and 'a cbuffer = { typ : 'a; length : int }
+and 'a cbuffer = { cstart : 'a ptr; length : int }
 and 'a buffers =
-  | LastBuf : 'a cbuffer typ -> 'a buffers
-  | ConBuf  : 'a cbuffer typ * 'b buffers -> ('a -> 'b) buffers
+  | LastBuf : 'a cbuffer -> 'a buffers
+  | ConBuf  : 'a cbuffer * 'b buffers -> ('a -> 'b) buffers (* TODO: 返り値を関数じゃない型にする *)
 and 'a static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = {

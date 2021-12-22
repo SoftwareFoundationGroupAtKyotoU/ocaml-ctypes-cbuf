@@ -32,6 +32,7 @@ let gen_c ~concurrency ~errno prefix fmt : (module FOREIGN') =
      let foreign_value cname typ =
        Cstubs_generate_c.value ~cname ~stub_name:(var prefix cname) fmt typ
      let returning = Ctypes.returning
+     let retbuf = Ctypes.retbuf
      let (@->) = Ctypes.(@->)
    end)
 
@@ -133,6 +134,7 @@ let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN') * (unit -> unit) =
          Ctypes.(void @-> returning (ptr void));
        val_bindings := Val_bind (cname, name, typ) :: !val_bindings
      let returning = Ctypes.returning
+     let retbuf = Ctypes.retbuf
      let (@->) = Ctypes.(@->)
    end),
   fun () ->
