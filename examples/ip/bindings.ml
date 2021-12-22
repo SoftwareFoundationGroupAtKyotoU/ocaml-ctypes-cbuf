@@ -1,9 +1,14 @@
+open Ctypes
+
 module C(F: Ctypes.FOREIGN) = struct
+  open F
   module IP = struct
     let ip_addr_pton = 
-      F.(foreign "ip_addr_pton" (Ctypes.string @-> Ctypes.buffer 4 @-> returning Ctypes.int))
+      foreign "ip_addr_pton" (string @-> retbuf (buffer 4 ocaml_bytes))
   end
 
-  let int_as_buffer =
-    F.(foreign "int_as_buffer" (Ctypes.ptr Ctypes.int @-> returning Ctypes.int))
+  (* let int_as_buffer =
+    foreign "int_as_buffer" retbuf (buffer 4 int) *)
+
+  let multi_buffer = foreign "multi_buffer" (string @-> retbuf (buffer 4 ocaml_bytes @* buffer 3 int @* buffer 1 char @* buffer 9 ocaml_bytes))
 end

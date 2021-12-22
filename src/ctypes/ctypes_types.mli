@@ -373,6 +373,7 @@ sig
       example. *)
 
   val retbuf : 'a cbuffers -> 'a fn
+  val buffer : int -> 'a typ -> 'a cbuffers
 
   (** {3 Function pointer types} *)
   type 'a static_funptr = 'a Ctypes_static.static_funptr
