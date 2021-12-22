@@ -95,8 +95,10 @@ cstubs: $(cstubs.dir)/$(cstubs.extra_mls) $$(LIB_TARGETS)
 cbuf.public = cbuf
 cbuf.dir = src/cbuf
 cbuf.subproject_deps = ctypes
+cbuf.deps = str integers
 cbuf.install = yes
 cbuf.install_native_objects = yes
+cstubs.extra_hs = $(package_integers_path)/ocaml_integers.h
 
 cbuf: PROJECT=cbuf
 cbuf: $(cbuf.dir)/$(cbuf.extra_mls) $$(LIB_TARGETS)
