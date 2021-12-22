@@ -45,7 +45,6 @@ type _ typ =
   | Bigarray        : (_, 'a, _) Ctypes_bigarray.t
                                          -> 'a typ
   | OCaml           : 'a ocaml_type      -> 'a ocaml typ
-  | Buffer          : int * 'a typ       -> 'a cbuffer typ
 and 'a carray = { astart : 'a ptr; alength : int }
 and ('a, 'kind) structured = { structured : ('a, 'kind) structured ptr } [@@unboxed]
 and 'a union = ('a, [`Union]) structured
@@ -56,10 +55,9 @@ and (_, _) pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
-and 'a cbuffer = { cstart : 'a ptr; length : int }
-and 'a buffers =
-  | LastBuf : 'a cbuffer -> 'a buffers
-  | ConBuf  : 'a cbuffer * 'b buffers -> ('a -> 'b) buffers
+and 'a cbuffers =
+  | LastBuf : int * 'a typ -> 'a cbuffers
+  | ConBuf  : 'a cbuffers * 'b cbuffers -> ('a * 'b) cbuffers
 and 'a static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = {
@@ -90,7 +88,7 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns  : 'a typ   -> 'a fn
   | Function : 'a typ * 'b fn  -> ('a -> 'b) fn
-  | Buffers  : 'a buffers -> 'a fn
+  | Buffers  : 'a cbuffers -> 'a fn
 
 type _ bigarray_class =
   Genarray :
@@ -140,7 +138,6 @@ let rec sizeof : type a. a typ -> int = function
   | Funptr _                       -> Ctypes_primitives.pointer_size
   | OCaml _                        -> raise IncompleteType
   | View { ty; _ }                 -> sizeof ty
-  | Buffer (i, ty)                 -> sizeof ty * i
 
 let rec alignment : type a. a typ -> int = function
     Void                             -> raise IncompleteType
@@ -157,7 +154,6 @@ let rec alignment : type a. a typ -> int = function
   | Funptr _                         -> Ctypes_primitives.pointer_alignment
   | OCaml _                          -> raise IncompleteType
   | View { ty; _ }                      -> alignment ty
-  | Buffer _                         -> raise IncompleteType
 
 let rec passable : type a. a typ -> bool = function
     Void                           -> true
@@ -173,7 +169,6 @@ let rec passable : type a. a typ -> bool = function
   | Abstract _                     -> false
   | OCaml _                        -> true
   | View { ty; _ }                    -> passable ty
-  | Buffer _                       -> true
 
 (* Whether a value resides in OCaml-managed memory.
    Values that reside in OCaml memory cannot be accessed
@@ -190,7 +185,6 @@ let rec ocaml_value : type a. a typ -> bool = function
   | Abstract _  -> false
   | OCaml _     -> true
   | View { ty; _ } -> ocaml_value ty
-  | Buffer _    -> true
 
 let rec has_ocaml_argument : type a. a fn -> bool = function
     Returns _ -> false
@@ -232,10 +226,10 @@ let ullong = Primitive Ctypes_primitive_types.Ullong
 let array i t = Array (t, i)
 let ocaml_string = OCaml String
 let ocaml_bytes = OCaml Bytes
-let buffer i ty = Buffer (i, ty)
+let buffer i ty = LastBuf (i, ty)
 let ocaml_float_array = OCaml FloatArray
 let ptr t = Pointer t
-let ( @->) f t =
+let (@->) f t =
   if not (passable f) then
     raise (Unsupported "Unsupported argument type")
   else
@@ -275,7 +269,8 @@ let returning v =
     Returns v
 let static_funptr fn = Funptr fn
 
-let retbuf : 'a buffers -> 'a fn = fun buf -> Buffers buf
+let (@*) l r = ConBuf (l, r)
+let retbuf = fun buf -> Buffers buf
 
 let structure tag =
   Struct { spec = Incomplete { isize = 0 }; tag; fields = [] }

@@ -249,8 +249,6 @@ let rec ml_typ_of_return_typ : type a. a typ -> ml_type =
     "cstubs does not support OCaml bytes values as return values"
   | OCaml FloatArray -> Ctypes_static.unsupported
     "cstubs does not support OCaml float arrays as return values"
-  | Buffer _ -> Ctypes_static.unsupported
-  "cstubs does not support OCaml bytes values as return values"
 
 let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
   | Void -> `Ident (path_of_string "unit")
@@ -275,9 +273,6 @@ let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
     `Appl (path_of_string "CI.ocaml",
            [`Appl (path_of_string "array",
                    [`Ident (path_of_string "float")])])
-  | Buffer _ ->
-    `Appl (path_of_string "CI.ocaml",
-            [`Ident (path_of_string "bytes")])
 
 type polarity = In | Out
 
@@ -456,13 +451,6 @@ let rec pattern_and_exp_of_typ : type a. concurrency:concurrency_policy -> errno
   | Bigarray _ as ty -> internal_error
     "Unexpected bigarray type encountered during ML code generation: %s"
     (Ctypes.string_of_typ ty)
-  | Buffer _ -> (* TODO: この辺を変更すれば良さそう？ *)
-    begin match pol with
-    | In -> (static_con "OCaml" [static_con "Bytes" []], None, binds)
-    | Out -> Ctypes_static.unsupported
-    "cstubs does not support OCaml bytes values as return values"
-    end
-
 
 (* Build a pattern (without variables) that matches the argument *)
 let rec pattern_of_typ : type a. a typ -> ml_pat = function (* MEMO: これなに？ *)
@@ -498,9 +486,6 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function (* MEMO: これな�
     internal_error
       "Unexpected abstract type encountered during ML code generation: %s"
       (Ctypes.string_of_typ ty)
-  | Buffer _ -> 
-    Ctypes_static.unsupported
-    "cstubs does not support OCaml bytes values as global values"
 
 type wrapper_state = {
   pat: ml_pat;
