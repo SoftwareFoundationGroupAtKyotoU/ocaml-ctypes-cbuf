@@ -9,7 +9,10 @@
  (modules bindgen))
 
 (rule
- (targets cstubs_gen.c cstubs_gen.ml cbuf_gen.ml)
+ (targets 
+ cbuf_gen.c
+;  cbuf_gen.ml
+ )
  (action
   (run ./bindgen.exe)))
 
@@ -32,7 +35,7 @@
  (modules cstubs_gen_sample)
  (foreign_stubs
   (language c)
-  (names ip_addr_pton cstubs_gen)))
+  (names ip_addr_pton cbuf_gen)))
 
 (executable
  (name ip)

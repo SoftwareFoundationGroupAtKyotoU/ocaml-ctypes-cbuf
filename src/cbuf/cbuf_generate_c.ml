@@ -219,6 +219,9 @@ module Generate_C = struct
           match prj f (local x value) with
           | None -> body vars t
           | Some projected -> (projected, f) >>= fun x' -> body (x' :: vars) t)
+      | Buffers (LastBuf (_, t)) ->
+          body vars (Function ("hoge", t, Returns int))
+      | _ -> raise (Unsupported "not implemented!(Cbuf_generate_c.fn)")
     in
     let f' = name_params f in
     let vp = value_params f' in
@@ -316,6 +319,10 @@ module Generate_C = struct
         `Extern )
 end
 
+(* cname: バインドするCの関数名
+   stub_name: スタブの関数名
+   fn: 'a fn
+*)
 let fn ~errno ~cname ~stub_name fmt fn =
   let (`Function (`Fundec (f, xs, _), _, _) as dec) =
     Generate_C.fn ~errno ~stub_name ~cname fn
