@@ -105,7 +105,7 @@ struct
       begin match ceff e with
       | Ty (Pointer ty) -> Ty ty
       | Ty (Array (ty, _)) -> Ty ty
-      | Ty t -> Cstubs_errors.internal_error
+      | Ty t -> Cbuf_errors.internal_error
         "dereferencing expression of non-pointer type %s"
         (Ctypes.string_of_typ t)
       end
@@ -113,13 +113,13 @@ struct
     fun e f ->
       begin match ceff e with
           Ty (Pointer (Struct { fields; _ } as s)) -> lookup_field f s fields
-        | Ty t -> Cstubs_errors.internal_error
+        | Ty t -> Cbuf_errors.internal_error
           "accessing a field %s in an expression of type %s, which is not a pointer-to-struct type"
           f (Ctypes.string_of_typ t)
       end
   and lookup_field : type s a. string -> a typ -> s boxed_field list -> ty =
     fun f ty fields -> match fields with
-        [] -> Cstubs_errors.internal_error
+        [] -> Cbuf_errors.internal_error
                 "field %s not found in struct %s" f
                 (Ctypes.string_of_typ ty)
       | BoxedField { ftype; fname; _ } :: _ when fname = f -> Ty ftype

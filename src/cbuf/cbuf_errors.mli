@@ -7,7 +7,6 @@
 
 (* Exception definitions *)
 
-exception Cstubs_internal_error of string
+exception Cbuf_internal_error of string
 
-let internal_error fmt = 
-  Format.ksprintf (fun s -> raise (Cstubs_internal_error s)) fmt
+val internal_error : ('a, unit, string, 'b) format4 -> 'a

@@ -8,7 +8,7 @@
 (* C pretty printing. *)
 
 open Ctypes_static
-open Cstubs_c_language
+open Cbuf_c_language
 open Format
 
 let format_seq lbr fmt_item sep rbr fmt items =

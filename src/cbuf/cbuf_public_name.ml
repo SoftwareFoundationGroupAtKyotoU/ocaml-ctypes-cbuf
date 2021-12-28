@@ -7,7 +7,7 @@
 
 (* Publicly visible names for type values *)
 
-open Ctypes_path
+open Cbuf_path
 
 let ident_of_ml_prim : type a. a Ctypes_primitive_types.ml_prim -> path =
   let open Ctypes_primitive_types in function
@@ -70,7 +70,7 @@ let constructor_ident_of_prim : type a. a Ctypes_primitive_types.prim -> path =
 
 let constructor_cident_of_prim :
   type a. ?module_name:string -> a Ctypes_primitive_types.prim -> path =
-  fun ?(module_name="Cstubs_internals") ->
+  fun ?(module_name="Cbuf_internals") ->
     let path ident =
       path_of_string (Printf.sprintf "%s.%s" module_name ident)
     in Ctypes_primitive_types.(function

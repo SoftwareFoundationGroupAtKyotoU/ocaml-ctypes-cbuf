@@ -5,7 +5,7 @@
  * See the file LICENSE for details.
  *)
 
-(* Cstubs public interface. *)
+(* Cbuf public interface. *)
 
 module type FOREIGN = Ctypes.FOREIGN
 
@@ -27,10 +27,10 @@ let gen_c ~concurrency ~errno prefix fmt : (module FOREIGN') =
      type 'a return = 'a
      type 'a result = unit
      let foreign cname fn =
-       Cstubs_generate_c.fn ~concurrency ~errno
+       Cbuf_generate_c.fn ~concurrency ~errno
          ~cname ~stub_name:(var prefix cname) fmt fn
      let foreign_value cname typ =
-       Cstubs_generate_c.value ~cname ~stub_name:(var prefix cname) fmt typ
+       Cbuf_generate_c.value ~cname ~stub_name:(var prefix cname) fmt typ
      let returning = Ctypes.returning
      let retbuf = Ctypes.retbuf
      let (@->) = Ctypes.(@->)
@@ -91,7 +91,7 @@ let write_foreign ~concurrency ~errno fmt bindings val_bindings =
     "  fun name t -> match t, name with@\n@[<v>";
   ListLabels.iter bindings
     ~f:(fun (Bind (stub_name, external_name, fn)) ->
-      Cstubs_generate_ml.case ~concurrency ~errno ~stub_name ~external_name fmt fn);
+      Cbuf_generate_ml.case ~concurrency ~errno ~stub_name ~external_name fmt fn);
   Format.fprintf fmt "@[<hov 2>@[|@ _,@ s@ ->@]@ ";
   Format.fprintf fmt
     " @[Printf.ksprintf@ failwith@ \"No match for %%s\" s@]@]@]@.@\n";
@@ -103,7 +103,7 @@ let write_foreign ~concurrency ~errno fmt bindings val_bindings =
     "  fun name t -> match t, name with@\n@[<v>";
   ListLabels.iter val_bindings
     ~f:(fun (Val_bind (stub_name, external_name, typ)) ->
-      Cstubs_generate_ml.val_case ~stub_name ~external_name fmt typ);
+      Cbuf_generate_ml.val_case ~stub_name ~external_name fmt typ);
   Format.fprintf fmt "@[<hov 2>@[|@ _,@ s@ ->@]@ ";
   Format.fprintf fmt
     " @[Printf.ksprintf@ failwith@ \"No match for %%s\" s@]@]@]@.@\n"
@@ -125,11 +125,11 @@ let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN') * (unit -> unit) =
      let foreign cname fn =
        let name = var prefix cname in
        bindings := Bind (cname, name, fn) :: !bindings;
-       Cstubs_generate_ml.extern ~concurrency ~errno
+       Cbuf_generate_ml.extern ~concurrency ~errno
          ~stub_name:name ~external_name:name fmt fn
      let foreign_value cname typ =
        let name = var prefix cname in
-       Cstubs_generate_ml.extern ~concurrency:`Sequential ~errno:`Ignore_errno
+       Cbuf_generate_ml.extern ~concurrency:`Sequential ~errno:`Ignore_errno
          ~stub_name:name ~external_name:name fmt
          Ctypes.(void @-> returning (ptr void));
        val_bindings := Val_bind (cname, name, typ) :: !val_bindings
@@ -170,8 +170,8 @@ let write_c ?(concurrency=`Sequential) ?(errno=`Ignore_errno)
 let write_ml ?(concurrency=`Sequential) ?(errno=`Ignore_errno)
     fmt ~prefix (module B : BINDINGS) =
   let foreign, finally = gen_ml ~concurrency ~errno prefix fmt in
-  let () = Format.fprintf fmt "module CI = Cstubs_internals@\n@\n" in
+  let () = Format.fprintf fmt "module CI = Cbuf_internals@\n@\n" in
   let module M = B((val foreign)) in
   finally ()
 
-module Types = Cstubs_structs
+module Types = Cbuf_structs

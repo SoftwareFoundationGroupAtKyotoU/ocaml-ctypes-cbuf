@@ -8,8 +8,8 @@
 (* ML stub generation *)
 
 open Ctypes_static
-open Ctypes_path
-open Cstubs_errors
+open Cbuf_path
+open Cbuf_errors
 
 type non_lwt = [ `Sequential | `Unlocked ]
 type lwt = [ `Lwt_jobs | `Lwt_preemptive ]
@@ -219,7 +219,7 @@ let byte_stub_name : string -> ml_external_type -> string option =
     else None
 
 let attributes : type a. a fn -> attributes =
-   let open Cstubs_analysis in
+   let open Cbuf_analysis in
    fun fn -> { float = float fn; noalloc = not (may_allocate fn) }
 
 let managed_buffer = `Ident (path_of_string "CI.managed_buffer")
@@ -232,7 +232,7 @@ let fatfunptr = `Appl (path_of_string "CI.fatfunptr", [`Ident (path_of_string "_
 let rec ml_typ_of_return_typ : type a. a typ -> ml_type =
   function
   | Void -> `Ident (path_of_string "unit")
-  | Primitive p -> `Ident (Cstubs_public_name.ident_of_ml_prim (Ctypes_primitive_types.ml_prim p))
+  | Primitive p -> `Ident (Cbuf_public_name.ident_of_ml_prim (Ctypes_primitive_types.ml_prim p))
   | Struct _    -> managed_buffer
   | Union _     -> managed_buffer
   | Abstract _  -> managed_buffer
@@ -252,7 +252,7 @@ let rec ml_typ_of_return_typ : type a. a typ -> ml_type =
 
 let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
   | Void -> `Ident (path_of_string "unit")
-  | Primitive p -> `Ident (Cstubs_public_name.ident_of_ml_prim (Ctypes_primitive_types.ml_prim p))
+  | Primitive p -> `Ident (Cbuf_public_name.ident_of_ml_prim (Ctypes_primitive_types.ml_prim p))
   | Pointer _   -> fatptr
   | Funptr _    -> fatfunptr
   | Struct _    -> fatptr
@@ -284,8 +284,8 @@ let ml_typ_of_typ = function
     In -> ml_typ_of_arg_typ
   | Out -> ml_typ_of_return_typ
 
-let lwt_job_type = Ctypes_path.path_of_string "Lwt_unix.job"
-let int_type = `Ident (Ctypes_path.path_of_string "Signed.sint")
+let lwt_job_type = Cbuf_path.path_of_string "Lwt_unix.job"
+let int_type = `Ident (Cbuf_path.path_of_string "Signed.sint")
 
 let rec ml_external_type_of_fn :
   type a. concurrency:concurrency_policy -> errno:errno_policy ->
@@ -321,15 +321,15 @@ let extern ~concurrency ~errno ~stub_name ~external_name fmt fn =
   Format.fprintf fmt "%a@." Emit_ML.extern ext
 
 let static_con c args =
-  `Con (Ctypes_path.path_of_string ("CI." ^ c), args)
+  `Con (Cbuf_path.path_of_string ("CI." ^ c), args)
 
 let local_con c args =
-  `Con (Ctypes_path.path_of_string c, args)
+  `Con (Cbuf_path.path_of_string c, args)
 
-let map_result_id = Ctypes_path.path_of_string "map_result"
-let make_ptr = Ctypes_path.path_of_string "CI.make_ptr"
-let make_fun_ptr = Ctypes_path.path_of_string "CI.make_fun_ptr"
-let make_structured = Ctypes_path.path_of_string "CI.make_structured"
+let map_result_id = Cbuf_path.path_of_string "map_result"
+let make_ptr = Cbuf_path.path_of_string "CI.make_ptr"
+let make_fun_ptr = Cbuf_path.path_of_string "CI.make_fun_ptr"
+let make_structured = Cbuf_path.path_of_string "CI.make_structured"
 
 let map_result ~concurrency ~errno f e =
   let map_result f x = `Appl (`Appl (`Ident map_result_id, f), x) in
@@ -359,7 +359,7 @@ let rec pattern_and_exp_of_typ : type a. concurrency:concurrency_policy -> errno
   | Void ->
     (static_con "Void" [], None, binds)
   | Primitive p ->
-    let id = Cstubs_public_name.constructor_cident_of_prim ~module_name:"CI" p in
+    let id = Cbuf_public_name.constructor_cident_of_prim ~module_name:"CI" p in
     (static_con "Primitive" [`Con (id, [])], None, binds)
   | Pointer _ ->
     begin match pol with
@@ -420,7 +420,7 @@ let rec pattern_and_exp_of_typ : type a. concurrency:concurrency_policy -> errno
       let pat = static_con "View"
         [`Record ([path_of_string "CI.ty", p;
                    path_of_string "write", `Var x], `Etc)] in
-      (pat, Some (`Ident (Ctypes_path.path_of_string y)), (`Var y, e) :: binds)
+      (pat, Some (`Ident (Cbuf_path.path_of_string y)), (`Var y, e) :: binds)
     | Out ->
       let (p, None, binds), e | (p, Some e, binds), _ =
         pattern_and_exp_of_typ ~concurrency ~errno ty e pol binds, e in
@@ -456,7 +456,7 @@ let rec pattern_and_exp_of_typ : type a. concurrency:concurrency_policy -> errno
 let rec pattern_of_typ : type a. a typ -> ml_pat = function (* MEMO: これなに？ *)
     Void -> static_con "Void" []
   | Primitive p ->
-    let id = Cstubs_public_name.constructor_cident_of_prim ~module_name:"CI" p in
+    let id = Cbuf_public_name.constructor_cident_of_prim ~module_name:"CI" p in
     static_con "Primitive" [`Con (id, [])]
   | Pointer _ ->
     static_con "Pointer" [`Underscore]
@@ -495,8 +495,8 @@ type wrapper_state = {
   binds: (ml_pat * ml_exp) list;
 }
 
-let lwt_unix_run_job = Ctypes_path.path_of_string "Lwt_unix.run_job"
-let lwt_preemptive_detach = Ctypes_path.path_of_string "Lwt_preemptive.detach"
+let lwt_unix_run_job = Cbuf_path.path_of_string "Lwt_unix.run_job"
+let lwt_preemptive_detach = Cbuf_path.path_of_string "Lwt_preemptive.detach"
 
 let run_exp ~concurrency exp = match concurrency with
     #non_lwt -> exp
@@ -542,10 +542,10 @@ let rec wrapper_body : type a. concurrency:concurrency_policy -> errno:errno_pol
   | Buffers _ -> raise (Unsupported "not implemented!") (* TODO: implement this *)
 
 
-let lwt_bind = Ctypes_path.path_of_string "Lwt.bind"
-let lwt_return = Ctypes_path.path_of_string "Lwt.return"
-let box_lwt = Ctypes_path.path_of_string "box_lwt"
-let use_value = Ctypes_path.path_of_string "CI.use_value"
+let lwt_bind = Cbuf_path.path_of_string "Lwt.bind"
+let lwt_return = Cbuf_path.path_of_string "Lwt.return"
+let box_lwt = Cbuf_path.path_of_string "box_lwt"
+let use_value = Cbuf_path.path_of_string "CI.use_value"
 
 let return_result : args:lident list -> ml_exp =
   fun ~args ->
@@ -556,8 +556,8 @@ let return_result : args:lident list -> ml_exp =
             (`Appl (`Ident use_value,
                     `Tuple
                       (ListLabels.map args
-                         ~f:(fun x -> `Ident (Ctypes_path.path_of_string x)))),
-             `Appl (`Ident lwt_return, `Ident (Ctypes_path.path_of_string x))))
+                         ~f:(fun x -> `Ident (Cbuf_path.path_of_string x)))),
+             `Appl (`Ident lwt_return, `Ident (Cbuf_path.path_of_string x))))
 
 (** Returns the variables bound in a pattern, in no particular order *)
 let rec pat_bound_vars : ml_pat -> lident list = function

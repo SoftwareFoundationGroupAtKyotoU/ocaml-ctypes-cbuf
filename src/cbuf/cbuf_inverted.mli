@@ -44,4 +44,4 @@ val write_ml : Format.formatter -> prefix:string -> (module BINDINGS) -> unit
     {!INTERNAL} interface.
 
     The generated code uses definitions exposed in the module
-    [Cstubs_internals]. *)
+    [Cbuf_internals]. *)

@@ -31,12 +31,24 @@ _build/examples/fts/stub-generation/fts_if.cmo : _build/src/ctypes/ctypes.cmi
 _build/examples/fts/stub-generation/fts_if.cmx : _build/src/ctypes/ctypes.cmx
 _build/examples/fts/stub-generation/stub-generator/fts_stub_generator.cmo : _build/src/cstubs/cstubs.cmi
 _build/examples/fts/stub-generation/stub-generator/fts_stub_generator.cmx : _build/src/cstubs/cstubs.cmx
+_build/examples/ip/_build/default/bindgen.cmo : _build/src/cstubs/cstubs.cmi _build/src/cbuf/cbuf.cmi
+_build/examples/ip/_build/default/bindgen.cmx : _build/src/cstubs/cstubs.cmx _build/src/cbuf/cbuf.cmx
+_build/examples/ip/_build/default/bindings.cmo : _build/src/ctypes/ctypes.cmi
+_build/examples/ip/_build/default/bindings.cmx : _build/src/ctypes/ctypes.cmx
+_build/examples/ip/_build/default/cbuf_gen.cmo : _build/src/ctypes/ctypes.cmi
+_build/examples/ip/_build/default/cbuf_gen.cmx : _build/src/ctypes/ctypes.cmx
+_build/examples/ip/_build/default/cbuf_gen_sample.cmo : _build/src/ctypes/ctypes.cmi _build/src/ctypes/cstubs_internals.cmi
+_build/examples/ip/_build/default/cbuf_gen_sample.cmx : _build/src/ctypes/ctypes.cmx _build/src/ctypes/cstubs_internals.cmx
+_build/examples/ip/_build/default/cstubs_gen.cmo : _build/src/ctypes/ctypes.cmi _build/src/ctypes/cstubs_internals.cmi
+_build/examples/ip/_build/default/cstubs_gen.cmx : _build/src/ctypes/ctypes.cmx _build/src/ctypes/cstubs_internals.cmx
+_build/examples/ip/_build/default/ip.cmo : _build/src/ctypes/ctypes.cmi
+_build/examples/ip/_build/default/ip.cmx : _build/src/ctypes/ctypes.cmx
 _build/examples/ip/bindgen.cmo : _build/src/cstubs/cstubs.cmi _build/src/cbuf/cbuf.cmi
 _build/examples/ip/bindgen.cmx : _build/src/cstubs/cstubs.cmx _build/src/cbuf/cbuf.cmx
 _build/examples/ip/bindings.cmo : _build/src/ctypes/ctypes.cmi
 _build/examples/ip/bindings.cmx : _build/src/ctypes/ctypes.cmx
-_build/examples/ip/cstubs_gen_sample.cmo : _build/src/ctypes/ctypes.cmi _build/src/ctypes/cstubs_internals.cmi
-_build/examples/ip/cstubs_gen_sample.cmx : _build/src/ctypes/ctypes.cmx _build/src/ctypes/cstubs_internals.cmx
+_build/examples/ip/cstubs_gen_sample.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/ctypes/cstubs_internals.cmi
+_build/examples/ip/cstubs_gen_sample.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes.cmx _build/src/ctypes/cstubs_internals.cmx
 _build/examples/ip/ip.cmo :
 _build/examples/ip/ip.cmx :
 _build/examples/ncurses/foreign/ncurses.cmi :
@@ -54,36 +66,36 @@ _build/examples/sigset/sigset.cmi : _build/src/ctypes/posixTypes.cmi _build/src/
 _build/examples/sigset/sigset.cmo : _build/src/ctypes/posixTypes.cmi _build/src/ctypes-foreign/foreign.cmi _build/src/ctypes/ctypes.cmi _build/examples/sigset/sigset.cmi
 _build/examples/sigset/sigset.cmx : _build/src/ctypes/posixTypes.cmx _build/src/ctypes-foreign/foreign.cmx _build/src/ctypes/ctypes.cmx _build/examples/sigset/sigset.cmi
 _build/src/cbuf/cbuf.cmi : _build/src/ctypes/ctypes.cmi
-_build/src/cbuf/cbuf.cmo : _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_structs.cmi _build/src/cstubs/cstubs_generate_ml.cmi _build/src/cstubs/cstubs_generate_c.cmi _build/src/cbuf/cbuf.cmi
-_build/src/cbuf/cbuf.cmx : _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_structs.cmx _build/src/cstubs/cstubs_generate_ml.cmx _build/src/cstubs/cstubs_generate_c.cmx _build/src/cbuf/cbuf.cmi
-_build/src/cbuf/cstubs_analysis.cmi : _build/src/ctypes/ctypes_static.cmi
-_build/src/cbuf/cstubs_analysis.cmo : _build/src/ctypes/lDouble.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes_bigarray.cmi _build/src/ctypes/complexL.cmi _build/src/cbuf/cstubs_analysis.cmi
-_build/src/cbuf/cstubs_analysis.cmx : _build/src/ctypes/lDouble.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes_bigarray.cmx _build/src/ctypes/complexL.cmx _build/src/cbuf/cstubs_analysis.cmi
-_build/src/cbuf/cstubs_c_language.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_errors.cmi
-_build/src/cbuf/cstubs_c_language.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_errors.cmx
-_build/src/cbuf/cstubs_emit_c.cmo : _build/src/ctypes/ctypes_type_printing.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_c_language.cmo
-_build/src/cbuf/cstubs_emit_c.cmx : _build/src/ctypes/ctypes_type_printing.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_c_language.cmx
-_build/src/cbuf/cstubs_errors.cmi :
-_build/src/cbuf/cstubs_errors.cmo : _build/src/cbuf/cstubs_errors.cmi
-_build/src/cbuf/cstubs_errors.cmx : _build/src/cbuf/cstubs_errors.cmi
-_build/src/cbuf/cstubs_generate_c.cmi : _build/src/ctypes/ctypes.cmi
-_build/src/cbuf/cstubs_generate_c.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_emit_c.cmo _build/src/cstubs/cstubs_c_language.cmo _build/src/cbuf/cstubs_generate_c.cmi
-_build/src/cbuf/cstubs_generate_c.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_emit_c.cmx _build/src/cstubs/cstubs_c_language.cmx _build/src/cbuf/cstubs_generate_c.cmi
-_build/src/cbuf/cstubs_generate_ml.cmi : _build/src/ctypes/ctypes.cmi
-_build/src/cbuf/cstubs_generate_ml.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitive_types.cmi _build/src/cstubs/ctypes_path.cmi _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_public_name.cmi _build/src/cstubs/cstubs_errors.cmi _build/src/cstubs/cstubs_analysis.cmi _build/src/cbuf/cstubs_generate_ml.cmi
-_build/src/cbuf/cstubs_generate_ml.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/cstubs/ctypes_path.cmx _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_public_name.cmx _build/src/cstubs/cstubs_errors.cmx _build/src/cstubs/cstubs_analysis.cmx _build/src/cbuf/cstubs_generate_ml.cmi
-_build/src/cbuf/cstubs_inverted.cmi : _build/src/ctypes/ctypes.cmi
-_build/src/cbuf/cstubs_inverted.cmo : _build/src/ctypes/ctypes_type_printing.cmi _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_generate_ml.cmi _build/src/cstubs/cstubs_generate_c.cmi _build/src/cbuf/cstubs_inverted.cmi
-_build/src/cbuf/cstubs_inverted.cmx : _build/src/ctypes/ctypes_type_printing.cmx _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_generate_ml.cmx _build/src/cstubs/cstubs_generate_c.cmx _build/src/cbuf/cstubs_inverted.cmi
-_build/src/cbuf/cstubs_public_name.cmi : _build/src/ctypes/ctypes_primitive_types.cmi _build/src/cstubs/ctypes_path.cmi
-_build/src/cbuf/cstubs_public_name.cmo : _build/src/ctypes/ctypes_primitive_types.cmi _build/src/cstubs/ctypes_path.cmi _build/src/cbuf/cstubs_public_name.cmi
-_build/src/cbuf/cstubs_public_name.cmx : _build/src/ctypes/ctypes_primitive_types.cmx _build/src/cstubs/ctypes_path.cmx _build/src/cbuf/cstubs_public_name.cmi
-_build/src/cbuf/cstubs_structs.cmi : _build/src/ctypes/ctypes_types.cmi
-_build/src/cbuf/cstubs_structs.cmo : _build/src/ctypes/ctypes_types.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitives.cmo _build/src/ctypes/ctypes_primitive_types.cmi _build/src/cstubs/ctypes_path.cmi _build/src/ctypes/ctypes.cmi _build/src/cstubs/cstubs_public_name.cmi _build/src/cstubs/cstubs_c_language.cmo _build/src/cbuf/cstubs_structs.cmi
-_build/src/cbuf/cstubs_structs.cmx : _build/src/ctypes/ctypes_types.cmi _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitives.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/cstubs/ctypes_path.cmx _build/src/ctypes/ctypes.cmx _build/src/cstubs/cstubs_public_name.cmx _build/src/cstubs/cstubs_c_language.cmx _build/src/cbuf/cstubs_structs.cmi
-_build/src/cbuf/ctypes_path.cmi :
-_build/src/cbuf/ctypes_path.cmo : _build/src/cbuf/ctypes_path.cmi
-_build/src/cbuf/ctypes_path.cmx : _build/src/cbuf/ctypes_path.cmi
+_build/src/cbuf/cbuf.cmo : _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_structs.cmi _build/src/cbuf/cbuf_generate_ml.cmi _build/src/cbuf/cbuf_generate_c.cmi _build/src/cbuf/cbuf.cmi
+_build/src/cbuf/cbuf.cmx : _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_structs.cmx _build/src/cbuf/cbuf_generate_ml.cmx _build/src/cbuf/cbuf_generate_c.cmx _build/src/cbuf/cbuf.cmi
+_build/src/cbuf/cbuf_analysis.cmi : _build/src/ctypes/ctypes_static.cmi
+_build/src/cbuf/cbuf_analysis.cmo : _build/src/ctypes/lDouble.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes_bigarray.cmi _build/src/ctypes/complexL.cmi _build/src/cbuf/cbuf_analysis.cmi
+_build/src/cbuf/cbuf_analysis.cmx : _build/src/ctypes/lDouble.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes_bigarray.cmx _build/src/ctypes/complexL.cmx _build/src/cbuf/cbuf_analysis.cmi
+_build/src/cbuf/cbuf_c_language.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_errors.cmi
+_build/src/cbuf/cbuf_c_language.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_errors.cmx
+_build/src/cbuf/cbuf_emit_c.cmo : _build/src/ctypes/ctypes_type_printing.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_c_language.cmo
+_build/src/cbuf/cbuf_emit_c.cmx : _build/src/ctypes/ctypes_type_printing.cmx _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_c_language.cmx
+_build/src/cbuf/cbuf_errors.cmi :
+_build/src/cbuf/cbuf_errors.cmo : _build/src/cbuf/cbuf_errors.cmi
+_build/src/cbuf/cbuf_errors.cmx : _build/src/cbuf/cbuf_errors.cmi
+_build/src/cbuf/cbuf_generate_c.cmi : _build/src/ctypes/ctypes.cmi
+_build/src/cbuf/cbuf_generate_c.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_emit_c.cmo _build/src/cbuf/cbuf_c_language.cmo _build/src/cbuf/cbuf_generate_c.cmi
+_build/src/cbuf/cbuf_generate_c.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_emit_c.cmx _build/src/cbuf/cbuf_c_language.cmx _build/src/cbuf/cbuf_generate_c.cmi
+_build/src/cbuf/cbuf_generate_ml.cmi : _build/src/ctypes/ctypes.cmi
+_build/src/cbuf/cbuf_generate_ml.cmo : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_public_name.cmi _build/src/cbuf/cbuf_path.cmi _build/src/cbuf/cbuf_errors.cmi _build/src/cbuf/cbuf_analysis.cmi _build/src/cbuf/cbuf_generate_ml.cmi
+_build/src/cbuf/cbuf_generate_ml.cmx : _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_public_name.cmx _build/src/cbuf/cbuf_path.cmx _build/src/cbuf/cbuf_errors.cmx _build/src/cbuf/cbuf_analysis.cmx _build/src/cbuf/cbuf_generate_ml.cmi
+_build/src/cbuf/cbuf_inverted.cmi : _build/src/ctypes/ctypes.cmi
+_build/src/cbuf/cbuf_inverted.cmo : _build/src/ctypes/ctypes_type_printing.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_generate_ml.cmi _build/src/cbuf/cbuf_generate_c.cmi _build/src/cbuf/cbuf_inverted.cmi
+_build/src/cbuf/cbuf_inverted.cmx : _build/src/ctypes/ctypes_type_printing.cmx _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_generate_ml.cmx _build/src/cbuf/cbuf_generate_c.cmx _build/src/cbuf/cbuf_inverted.cmi
+_build/src/cbuf/cbuf_path.cmi :
+_build/src/cbuf/cbuf_path.cmo : _build/src/cbuf/cbuf_path.cmi
+_build/src/cbuf/cbuf_path.cmx : _build/src/cbuf/cbuf_path.cmi
+_build/src/cbuf/cbuf_public_name.cmi : _build/src/ctypes/ctypes_primitive_types.cmi _build/src/cbuf/cbuf_path.cmi
+_build/src/cbuf/cbuf_public_name.cmo : _build/src/ctypes/ctypes_primitive_types.cmi _build/src/cbuf/cbuf_path.cmi _build/src/cbuf/cbuf_public_name.cmi
+_build/src/cbuf/cbuf_public_name.cmx : _build/src/ctypes/ctypes_primitive_types.cmx _build/src/cbuf/cbuf_path.cmx _build/src/cbuf/cbuf_public_name.cmi
+_build/src/cbuf/cbuf_structs.cmi : _build/src/ctypes/ctypes_types.cmi
+_build/src/cbuf/cbuf_structs.cmo : _build/src/ctypes/ctypes_types.cmi _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes_primitives.cmo _build/src/ctypes/ctypes_primitive_types.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_public_name.cmi _build/src/cbuf/cbuf_path.cmi _build/src/cbuf/cbuf_c_language.cmo _build/src/cbuf/cbuf_structs.cmi
+_build/src/cbuf/cbuf_structs.cmx : _build/src/ctypes/ctypes_types.cmi _build/src/ctypes/ctypes_static.cmx _build/src/ctypes/ctypes_primitives.cmx _build/src/ctypes/ctypes_primitive_types.cmx _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_public_name.cmx _build/src/cbuf/cbuf_path.cmx _build/src/cbuf/cbuf_c_language.cmx _build/src/cbuf/cbuf_structs.cmi
 _build/src/configure/extract_from_c.cmo :
 _build/src/configure/extract_from_c.cmx :
 _build/src/configure/gen_c_primitives.cmo :

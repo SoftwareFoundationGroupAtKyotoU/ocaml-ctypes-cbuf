@@ -5,7 +5,7 @@
  * See the file LICENSE for details.
  *)
 
-(* Cstubs_inverted public interface. *)
+(* Cbuf_inverted public interface. *)
 
 module type INTERNAL =
 sig
@@ -74,7 +74,7 @@ value %s(value i, value v)
 }@\n" register
 
 let c_function fmt (Fn ({fn_name; fn_runtime_lock}, fn)) : unit =
-  Cstubs_generate_c.inverse_fn ~stub_name:fn_name ~runtime_lock:fn_runtime_lock fmt fn
+  Cbuf_generate_c.inverse_fn ~stub_name:fn_name ~runtime_lock:fn_runtime_lock fmt fn
 
 let gen_c fmt register infos =
   begin
@@ -83,7 +83,7 @@ let gen_c fmt register infos =
   end
 
 let c_declaration fmt (Fn ({fn_name; fn_runtime_lock = _}, fn)) : unit =
-  Cstubs_generate_c.inverse_fn_decl ~stub_name:fn_name fmt fn
+  Cbuf_generate_c.inverse_fn_decl ~stub_name:fn_name fmt fn
 
 let write_structure_declaration fmt (Ty ty) =
   Format.fprintf fmt "@[%a@];@\n@\n" (fun ty -> Ctypes.format_typ ty) ty
@@ -130,7 +130,7 @@ let gen_ml fmt register (infos : fn_info list) : unit =
   Format.fprintf fmt
     "type 'a fn = 'a@\n@\n";
   Format.fprintf fmt
-    "module CI = Cstubs_internals@\n@\n";
+    "module CI = Cbuf_internals@\n@\n";
   Format.fprintf fmt "type 'a f = 'a CI.fn =@\n";
   Format.fprintf fmt " | Returns  : 'a CI.typ   -> 'a f@\n";
   Format.fprintf fmt " | Function : 'a CI.typ * 'b f  -> ('a -> 'b) f@\n";
@@ -138,7 +138,7 @@ let gen_ml fmt register (infos : fn_info list) : unit =
     "type 'a name = @\n";
   ListLabels.iter infos
     ~f:(fun (Fn ({fn_name; _}, fn)) ->
-        Cstubs_generate_ml.constructor_decl ~concurrency:`Sequential
+        Cbuf_generate_ml.constructor_decl ~concurrency:`Sequential
           ~errno:`Ignore_errno
           (Printf.sprintf "Fn_%s" fn_name) fn fmt);
   Format.fprintf fmt
@@ -154,7 +154,7 @@ let gen_ml fmt register (infos : fn_info list) : unit =
     "fun ?runtime_lock name fn f -> match fn, name with@\n@[";
   ListLabels.iter infos
     ~f:(fun (Fn ({fn_name; _}, fn)) ->
-      Cstubs_generate_ml.inverse_case ~register_name:"register_value"
+      Cbuf_generate_ml.inverse_case ~register_name:"register_value"
         ~constructor:(Printf.sprintf "Fn_%s" fn_name) fn_name fmt fn);
   Format.fprintf fmt
     "| _ -> failwith (\"Linking mismatch on name: \" ^ name)@]@]@]@\n@\n";

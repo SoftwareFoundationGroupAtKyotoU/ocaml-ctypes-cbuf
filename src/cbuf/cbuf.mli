@@ -32,8 +32,8 @@ val ignore_errno : errno_policy
 val return_errno : errno_policy
 (** Generate code that returns errno in addition to the return value of each function.
 
-    Passing [return_errno] as the [errno] argument to {!Cstubs.write_c} and
-    {!Cstubs.write_ml} changes the return type of bound functions from a
+    Passing [return_errno] as the [errno] argument to {!Cbuf.write_c} and
+    {!Cbuf.write_ml} changes the return type of bound functions from a
     single value to a pair of values.  For example, the binding
     specification 
 
@@ -73,8 +73,8 @@ val lwt_preemptive : concurrency_policy
 
     http://ocsigen.org/lwt/2.5.1/api/Lwt_preemptive
 
-    Passing [lwt_preemptive] as the [concurrency] argument to {!Cstubs.write_c} and
-    {!Cstubs.write_ml} changes the return type of bound functions to include
+    Passing [lwt_preemptive] as the [concurrency] argument to {!Cbuf.write_c} and
+    {!Cbuf.write_ml} changes the return type of bound functions to include
     the {!Lwt.t} constructor.  For example, the binding specification
 
        [let unlink = foreign "unlink" (string @-> returning int)]
@@ -96,8 +96,8 @@ val lwt_jobs : concurrency_policy
 
     http://ocsigen.org/lwt/2.5.1/api/Lwt_unix#TYPEjob
 
-    Passing [lwt_jobs] as the [concurrency] argument to {!Cstubs.write_c} and
-    {!Cstubs.write_ml} changes the return type of bound functions to include
+    Passing [lwt_jobs] as the [concurrency] argument to {!Cbuf.write_c} and
+    {!Cbuf.write_ml} changes the return type of bound functions to include
     the {!Lwt.t} constructor.  For example, the binding specification
 
        [let unlink = foreign "unlink" (string @-> returning int)]
@@ -134,4 +134,4 @@ val write_ml : ?concurrency:concurrency_policy -> ?errno:errno_policy ->
     provided by the generated code.  The default is [sequential].
 
     The generated code uses definitions exposed in the module
-    [Cstubs_internals]. *)
+    [Cbuf_internals]. *)

@@ -175,15 +175,15 @@ let rec ml_pat_and_exp_of_typ : type a. a typ -> string * string =
     match ty with
     | Ctypes_static.View { Ctypes_static.ty; _ } ->
       let p, e = ml_pat_and_exp_of_typ ty in
-      let x = Cstubs_c_language.fresh_var ~prefix:"read" () in
+      let x = Cbuf_c_language.fresh_var ~prefix:"read" () in
       let p' = Printf.sprintf "Ctypes_static.View { Ctypes_static.read = %s; ty = %s }" x p
       and e' = Printf.sprintf "(%s (%s))" x e in
       (p', e')
     | Ctypes_static.Primitive p ->
       let pat = 
         (Format.asprintf "Ctypes_static.Primitive %a"
-           Ctypes_path.format_path
-           (Cstubs_public_name.constructor_cident_of_prim p))
+           Cbuf_path.format_path
+           (Cbuf_public_name.constructor_cident_of_prim p))
       and exp = primitive_format_string p in
       (pat, exp)
     | _ -> failwith "constant of non-primitive"
@@ -216,7 +216,7 @@ let write_enums fmt enums =
   let case (name, typedef) =
     printf1 fmt
       (Format.sprintf
-         "  | %S -> \n    Cstubs_internals.build_enum_type %S Ctypes_static.%%s ?typedef ?unexpected alist\n"
+         "  | %S -> \n    Cbuf_internals.build_enum_type %S Ctypes_static.%%s ?typedef ?unexpected alist\n"
          name
          name)
       (fun fmt ->

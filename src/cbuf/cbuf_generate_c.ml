@@ -8,7 +8,7 @@
 (* C stub generation *)
 
 open Ctypes_static
-open Cstubs_c_language
+open Cbuf_c_language
 open Unchecked_function_types
 
 let max_byte_args = 5
@@ -330,22 +330,22 @@ let fn ~concurrency ~errno ~cname ~stub_name fmt fn =
   in
   let nargs = List.length xs in
   if nargs > max_byte_args then begin
-    Cstubs_emit_c.cfundef fmt dec;
-    Cstubs_emit_c.cfundef fmt (Generate_C.byte_fn f fn nargs)
+    Cbuf_emit_c.cfundef fmt dec;
+    Cbuf_emit_c.cfundef fmt (Generate_C.byte_fn f fn nargs)
   end
   else
-    Cstubs_emit_c.cfundef fmt dec
+    Cbuf_emit_c.cfundef fmt dec
 
 let value ~cname ~stub_name fmt typ =
   let dec = Generate_C.value ~cname ~stub_name typ in
-  Cstubs_emit_c.cfundef fmt dec
+  Cbuf_emit_c.cfundef fmt dec
 
 let inverse_fn ~stub_name ~runtime_lock fmt fn : unit =
-  Cstubs_emit_c.cfundef fmt (Generate_C.inverse_fn ~stub_name ~runtime_lock fn)
+  Cbuf_emit_c.cfundef fmt (Generate_C.inverse_fn ~stub_name ~runtime_lock fn)
 
 let inverse_fn_decl ~stub_name fmt fn =
   Format.fprintf fmt "@[%a@];@\n"
-    Cstubs_emit_c.cfundec (Generate_C.fundec stub_name fn)
+    Cbuf_emit_c.cfundec (Generate_C.fundec stub_name fn)
 
 module Lwt =
 struct
@@ -421,7 +421,7 @@ struct
         Generate_C.((`DerefField (`Local j, x), ty) >>= fun y ->
                     body (y :: args) xs)
     in
-    Cstubs_emit_c.cfundef fmt
+    Cbuf_emit_c.cfundef fmt
       (`Function (`Fundec (sprintf "worker_%s" stub_name, [j], Ty void),
                   body [] args,
                   `Static))
@@ -443,11 +443,11 @@ struct
       fprintf fmt "%a);@]@\n"
         (let f (type r) fmt : r typ -> _ = function
              Void ->
-             Cstubs_emit_c.ceff fmt Generate_C.val_unit
+             Cbuf_emit_c.ceff fmt Generate_C.val_unit
            | ty ->
-             Cstubs_emit_c.ceff fmt
+             Cbuf_emit_c.ceff fmt
                (Generate_C.inj ty
-                  (`Local ("j->result", Cstubs_c_language.(Ty ty))))
+                  (`Local ("j->result", Cbuf_c_language.(Ty ty))))
          in f
         )
         result;
@@ -461,7 +461,7 @@ struct
       fprintf fmt "@[value@ %s@;@[(%s)@]@]@;@[<2>{@\n"
         stub_name
         (String.concat ", " (List.map (fun (_, x) -> "value "^ x) args));
-      Cstubs_emit_c.camlParam fmt (List.map snd args);
+      Cbuf_emit_c.camlParam fmt (List.map snd args);
 
       fprintf fmt "@[LWT_UNIX_INIT_JOB(job,@ %s,@ 0)@];@\n"
         stub_name;
@@ -474,8 +474,8 @@ struct
         ~f:(fun (BoxedType t, x) ->
             fprintf fmt "@[job->%s@ =@ %a@];@\n" x
               (fun fmt (t, x) ->
-                 Cstubs_emit_c.ceff fmt
-                   (prj t (`Local (x, Cstubs_c_language.(Ty value)))))
+                 Cbuf_emit_c.ceff fmt
+                   (prj t (`Local (x, Cbuf_c_language.(Ty value)))))
               (t, x));
       fprintf fmt "@[CAMLreturn(lwt_unix_alloc_job(&(job->job)))@];@]@\n";
       fprintf fmt "}@\n";
