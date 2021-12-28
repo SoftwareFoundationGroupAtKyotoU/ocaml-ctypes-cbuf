@@ -45,6 +45,9 @@ and ('a, 'b) pointer = ('a, 'b) Ctypes_static.pointer =
 | OCamlRef : int * 'a * 'a ocaml_type -> ('a, [`OCaml]) pointer
 and 'a ptr = ('a, [`C]) pointer
 and 'a ocaml = ('a, [`OCaml]) pointer
+and 'a cbuffers =
+  | LastBuf : int * 'a typ -> 'a cbuffers
+  | ConBuf : 'a cbuffers * 'b cbuffers -> ('a * 'b) cbuffers
 and 'a static_funptr = 'a Ctypes_static.static_funptr =
   Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 and ('a, 'b) view = ('a, 'b) Ctypes_static.view = {
