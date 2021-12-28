@@ -172,29 +172,30 @@ module Generate_C = struct
   type _ fn =
     | Returns : 'a typ -> 'a fn
     | Function : string * 'a typ * 'b fn -> ('a -> 'b) fn
+    | Buffers : 'a cbuffers -> 'a fn
 
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Buffers _ ->
-        raise (Unsupported "not implemented!(Cbuf_generate_c.name_params)")
+    | Ctypes_static.Buffers b -> Buffers b
+  (* 型変数aを変えることができないのでここではBuffer bのまま *)
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
+    | Buffers _b -> []
 
   let fundec : type a. string -> a Ctypes.fn -> cfundec =
    fun name fn -> `Fundec (name, args fn, return_type fn)
 
   let fn :
       type a.
-      concurrency:[ `Sequential | `Unlocked ] ->
       errno:errno_policy ->
       cname:string ->
       stub_name:string ->
       a Ctypes_static.fn ->
       cfundef =
-   fun ~concurrency ~errno:errno_ ~cname ~stub_name f ->
+   fun ~errno:errno_ ~cname ~stub_name f ->
     let fvar =
       { fname = cname; allocates = false; reads_ocaml_heap = false; fn = Fn f }
     in
@@ -203,18 +204,9 @@ module Generate_C = struct
       | Returns t -> (
           let x = fresh_var () in
           let e = `App (fvar, (List.rev vars :> cexp list)) in
-          match (errno_, concurrency) with
-          | `Ignore_errno, `Sequential ->
-              `Let ((local x t, e), (inj t (local x t) :> ccomp))
-          | `Ignore_errno, `Unlocked ->
-              release_runtime_system
-              >> `Let
-                   ( (local x t, e),
-                     acquire_runtime_system
-                     >> (((inj t (local x t) :> ccomp), value) >>= fun x ->
-                         `CAMLreturnT (Ty value, x)
-                          :> ccomp) )
-          | `Return_errno, `Sequential ->
+          match errno_ with
+          | `Ignore_errno -> `Let ((local x t, e), (inj t (local x t) :> ccomp))
+          | `Return_errno ->
               (`LetAssign
                  ( errno,
                    `Int Signed.SInt.zero,
@@ -222,20 +214,6 @@ module Generate_C = struct
                      ( (local x t, e),
                        ((inj t (local x t) :> ccomp), value) >>= fun v ->
                        (pair_with_errno v :> ccomp) ) )
-                : ccomp)
-          | `Return_errno, `Unlocked ->
-              (`LetAssign
-                 ( errno,
-                   `Int Signed.SInt.zero,
-                   release_runtime_system
-                   >> `Let
-                        ( (local x t, e),
-                          ( acquire_runtime_system
-                            >> (inj t (local x t) :> ccomp),
-                            value )
-                          >>= fun v ->
-                          ((pair_with_errno v :> ccomp), value) >>= fun x ->
-                          `CAMLreturnT (Ty value, x) ) )
                 : ccomp))
       | Function (x, f, t) -> (
           match prj f (local x value) with
@@ -244,12 +222,7 @@ module Generate_C = struct
     in
     let f' = name_params f in
     let vp = value_params f' in
-    `Function
-      ( `Fundec (stub_name, vp, Ty value),
-        (match concurrency with
-        | `Unlocked -> `CAMLparam (List.map fst vp, body [] f')
-        | `Sequential -> body [] f'),
-        `Extern )
+    `Function (`Fundec (stub_name, vp, Ty value), body [] f', `Extern)
 
   let byte_fn : type a. string -> a Ctypes_static.fn -> int -> cfundef =
    fun fname fn nargs ->
@@ -343,9 +316,9 @@ module Generate_C = struct
         `Extern )
 end
 
-let fn ~concurrency ~errno ~cname ~stub_name fmt fn =
+let fn ~errno ~cname ~stub_name fmt fn =
   let (`Function (`Fundec (f, xs, _), _, _) as dec) =
-    Generate_C.fn ~concurrency ~errno ~stub_name ~cname fn
+    Generate_C.fn ~errno ~stub_name ~cname fn
   in
   let nargs = List.length xs in
   if nargs > max_byte_args then (
@@ -363,187 +336,3 @@ let inverse_fn ~stub_name ~runtime_lock fmt fn : unit =
 let inverse_fn_decl ~stub_name fmt fn =
   Format.fprintf fmt "@[%a@];@\n" Cbuf_emit_c.cfundec
     (Generate_C.fundec stub_name fn)
-
-module Lwt = struct
-  let fprintf, sprintf = (Format.fprintf, Printf.sprintf)
-
-  let unsupported t =
-    let fail msg = raise (Unsupported msg) in
-    Printf.ksprintf fail "cstubs.lwt does not support the type %s"
-      (Ctypes.string_of_typ t)
-
-  let rec prj : type a b. a typ -> orig:b typ -> cexp -> ceff =
-   fun ty ~orig x ->
-    match ty with
-    | Primitive p -> `App (prim_prj p, [ x ])
-    | Pointer _ -> Generate_C.of_fatptr x
-    | Funptr _ -> Generate_C.of_fatptr x
-    | View { ty; _ } -> prj ty ~orig x
-    | t -> unsupported t
-
-  let prj ty x = prj ty ~orig:ty x
-  let lwt_unix_job = abstract ~name:"struct lwt_unix_job" ~size:1 ~alignment:1
-  let structure_type stub_name = structure (sprintf "job_%s" stub_name)
-
-  let structure (type r) ~errno ~stub_name fmt _fn args (result : r typ) =
-    let open Ctypes in
-    let s = structure_type stub_name in
-    let (_ : (_, _) field) = field s "job" lwt_unix_job in
-    let () =
-      match result with
-      | Void ->
-          let (_ : (_, _) field) = field s "result" int in
-          ()
-      | result ->
-          let (_ : (_, _) field) = field s "result" result in
-          ()
-    in
-    let () =
-      match errno with
-      | `Ignore_errno -> ()
-      | `Return_errno -> ignore (field s "error_status" sint)
-    in
-    let () =
-      ListLabels.iter args ~f:(fun (BoxedType t, name) ->
-          ignore (field s name t : (_, _) field))
-    in
-    let () = seal s in
-    fprintf fmt "@[%a@];@\n" (fun t -> format_typ t) s
-
-  let worker (type r) ~errno ~cname ~stub_name fmt f (result : r typ) args =
-    let fn' =
-      { fname = cname; allocates = false; reads_ocaml_heap = false; fn = Fn f }
-    and j = ("j", Ty (ptr (structure_type stub_name))) in
-    let rec body args : _ -> ccomp = function
-      | [] -> (
-          let r c =
-            match result with
-            | Void -> Generate_C.(`App (fn', List.rev args) >> c)
-            | result ->
-                Generate_C.cast ~from:(Ty result) ~into:(Ty Void)
-                  (`LetAssign
-                    ( `PointerField (`Local j, "result"),
-                      `App (fn', List.rev args),
-                      c ))
-          in
-          match errno with
-          | `Ignore_errno -> r (`Return (Ty Void, `Int Signed.SInt.zero))
-          | `Return_errno ->
-              let open Generate_C in
-              `LetAssign
-                ( errno,
-                  `Int Signed.SInt.zero,
-                  r
-                    (`LetAssign
-                      ( `PointerField (`Local j, "error_status"),
-                        errno,
-                        `Return (Ty Void, `Int Signed.SInt.zero) )) ))
-      | (BoxedType ty, x) :: xs ->
-          Generate_C.(
-            (`DerefField (`Local j, x), ty) >>= fun y -> body (y :: args) xs)
-    in
-    Cbuf_emit_c.cfundef fmt
-      (`Function
-        ( `Fundec (sprintf "worker_%s" stub_name, [ j ], Ty void),
-          body [] args,
-          `Static ))
-
-  let result (type r) ~errno ~stub_name fmt _fn (result : r typ) =
-    fprintf fmt
-      "@[static@ value@ result_%s@;@[(struct@ job_%s@ *j)@]@]@;@[<2>{@\n"
-      stub_name stub_name;
-    fprintf fmt "@[CAMLparam0@ ();@]@\n";
-    fprintf fmt "@[CAMLlocal1@ (rv);@]@\n";
-    let () =
-      match errno with
-      | `Ignore_errno -> fprintf fmt "@[rv@ =@ ("
-      | `Return_errno ->
-          fprintf fmt "@[rv@ =@ caml_alloc_tuple(2);@]@\n";
-          fprintf fmt
-            "@[Store_field(rv,@ 1,@ ctypes_copy_sint(j->error_status));@]@\n";
-          fprintf fmt "@[Store_field(rv,@ 0,@ "
-    in
-    fprintf fmt "%a);@]@\n"
-      (let f (type r) fmt : r typ -> _ = function
-         | Void -> Cbuf_emit_c.ceff fmt Generate_C.val_unit
-         | ty ->
-             Cbuf_emit_c.ceff fmt
-               (Generate_C.inj ty
-                  (`Local ("j->result", Cbuf_c_language.(Ty ty))))
-       in
-       f)
-      result;
-    fprintf fmt "@[lwt_unix_free_job(&j->job)@];@\n";
-    fprintf fmt "@[CAMLreturn@ (rv)@];@]@\n";
-    fprintf fmt "}@\n"
-
-  let stub ~errno ~stub_name fmt _fn args =
-    fprintf fmt "@[value@ %s@;@[(%s)@]@]@;@[<2>{@\n" stub_name
-      (String.concat ", " (List.map (fun (_, x) -> "value " ^ x) args));
-    Cbuf_emit_c.camlParam fmt (List.map snd args);
-
-    fprintf fmt "@[LWT_UNIX_INIT_JOB(job,@ %s,@ 0)@];@\n" stub_name;
-    let () =
-      match errno with
-      | `Ignore_errno -> ()
-      | `Return_errno -> fprintf fmt "@[job->error_status@ =@ 0@];@\n"
-    in
-    ListLabels.iter args ~f:(fun (BoxedType t, x) ->
-        fprintf fmt "@[job->%s@ =@ %a@];@\n" x
-          (fun fmt (t, x) ->
-            Cbuf_emit_c.ceff fmt
-              (prj t (`Local (x, Cbuf_c_language.(Ty value)))))
-          (t, x));
-    fprintf fmt "@[CAMLreturn(lwt_unix_alloc_job(&(job->job)))@];@]@\n";
-    fprintf fmt "}@\n"
-
-  let byte_stub ~errno ~stub_name fmt _fn args =
-    let _ = errno in
-    let nargs = List.length args in
-    fprintf fmt "@[value@ %s_byte%d@;@[(value *argv, int argc)@]@]@;@[<2>{@\n"
-      stub_name nargs;
-    fprintf fmt "@[<2>return@ @[%s(@[" stub_name;
-    ListLabels.iteri args ~f:(fun i _ ->
-        if i = nargs - 1 then fprintf fmt "argv[%d]" i
-        else fprintf fmt "argv[%d],@ " i);
-    fprintf fmt ")@]@]@];@]@\n";
-    fprintf fmt "}@\n"
-
-  let fn_args_and_result fn =
-    let counter = ref 0 in
-    let var prefix =
-      incr counter;
-      Printf.sprintf "%s_%d" prefix !counter
-    in
-    let rec aux : type a. a fn -> _ -> _ =
-     fun fn args ->
-      match fn with
-      | Function (Void, f) -> aux f args
-      | Function (t, f) -> aux f ((BoxedType t, var "arg") :: args)
-      | Returns t -> (List.rev args, BoxedType t)
-      | Buffers _ ->
-          raise
-            (Unsupported "not implemented!(Cbuf_generate_c.fn_args_and_result)")
-    in
-    aux fn []
-
-  let fn ~errno ~cname ~stub_name fmt fn =
-    let args, BoxedType r = fn_args_and_result fn in
-    structure ~errno ~stub_name fmt fn args r;
-    worker ~errno ~cname ~stub_name fmt fn r args;
-    result ~errno ~stub_name fmt fn r;
-    stub ~errno ~stub_name fmt fn args;
-    if List.length args > max_byte_args then
-      byte_stub ~errno ~stub_name fmt fn args;
-    fprintf fmt "@\n"
-end
-
-let fn ~concurrency ~errno ~cname ~stub_name fmt f =
-  match concurrency with
-  | (`Lwt_preemptive | `Unlocked | `Lwt_jobs) when has_ocaml_argument f ->
-      raise
-        (Unsupported "Unsupported argument type when releasing runtime lock")
-  | `Lwt_preemptive | `Unlocked ->
-      fn ~concurrency:`Unlocked ~errno ~cname ~stub_name fmt f
-  | `Sequential -> fn ~concurrency:`Sequential ~errno ~cname ~stub_name fmt f
-  | `Lwt_jobs -> Lwt.fn ~errno ~cname ~stub_name fmt f
