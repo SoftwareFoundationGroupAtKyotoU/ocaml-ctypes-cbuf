@@ -122,13 +122,13 @@ let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN') * (unit -> unit) =
       let foreign cname fn =
         let name = var prefix cname in
         bindings := Bind (cname, name, fn) :: !bindings;
-        Cbuf_generate_ml.extern ~concurrency ~errno ~stub_name:name
-          ~external_name:name fmt fn
+        Cbuf_generate_ml.extern ~errno ~stub_name:name ~external_name:name fmt
+          fn
 
       let foreign_value cname typ =
         let name = var prefix cname in
-        Cbuf_generate_ml.extern ~concurrency:`Sequential ~errno:`Ignore_errno
-          ~stub_name:name ~external_name:name fmt
+        Cbuf_generate_ml.extern ~errno:`Ignore_errno ~stub_name:name
+          ~external_name:name fmt
           Ctypes.(void @-> returning (ptr void));
         val_bindings := Val_bind (cname, name, typ) :: !val_bindings
 

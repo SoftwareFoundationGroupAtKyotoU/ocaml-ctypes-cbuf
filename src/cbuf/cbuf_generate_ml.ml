@@ -304,31 +304,16 @@ let lwt_job_type = Cbuf_path.path_of_string "Lwt_unix.job"
 let int_type = `Ident (Cbuf_path.path_of_string "Signed.sint")
 
 let rec ml_external_type_of_fn :
-    type a.
-    concurrency:concurrency_policy ->
-    errno:errno_policy ->
-    a fn ->
-    polarity ->
-    ml_external_type =
- fun ~concurrency ~errno fn polarity ->
-  match (fn, concurrency, errno) with
-  | Returns t, (#non_lwt | `Lwt_preemptive), `Ignore_errno ->
-      `Prim ([], ml_typ_of_typ polarity t)
-  | Returns t, (#non_lwt | `Lwt_preemptive), `Return_errno ->
+    type a. errno:errno_policy -> a fn -> polarity -> ml_external_type =
+ fun ~errno fn polarity ->
+  match (fn, errno) with
+  | Returns t, `Ignore_errno -> `Prim ([], ml_typ_of_typ polarity t)
+  | Returns t, `Return_errno ->
       `Prim ([], `Pair (ml_typ_of_typ polarity t, int_type))
-  | Returns t, `Lwt_jobs, `Ignore_errno ->
-      `Prim ([], `Appl (lwt_job_type, [ ml_typ_of_typ polarity t ]))
-  | Returns t, `Lwt_jobs, `Return_errno ->
-      `Prim
-        ( [],
-          `Appl (lwt_job_type, [ `Pair (ml_typ_of_typ polarity t, int_type) ])
-        )
-  | Function (f, t), _, _ ->
-      let (`Prim (l, t)) =
-        ml_external_type_of_fn ~concurrency ~errno t polarity
-      in
+  | Function (f, t), _ ->
+      let (`Prim (l, t)) = ml_external_type_of_fn ~errno t polarity in
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
-  | Buffers _, _, _ ->
+  | Buffers _, _ ->
       raise
         (Unsupported "not implemented!(Cbuf_generate_ml.ml_external_type_of_fn)")
 
@@ -338,9 +323,9 @@ let fresh_var () =
   incr var_counter;
   Printf.sprintf "x%d" !var_counter
 
-let extern ~concurrency ~errno ~stub_name ~external_name fmt fn =
+let extern ~errno ~stub_name ~external_name fmt fn =
   let ext =
-    let typ = ml_external_type_of_fn ~concurrency ~errno fn Out in
+    let typ = ml_external_type_of_fn ~errno fn Out in
     {
       ident = external_name;
       typ;
@@ -742,17 +727,11 @@ let val_case ~stub_name ~external_name fmt typ =
   Format.fprintf fmt "@[<hov 2>@[%a@]@]@]@." Emit_ML.(ml_exp ApplParens) rhs
 
 let constructor_decl :
-    type a.
-    concurrency:concurrency_policy ->
-    errno:errno_policy ->
-    string ->
-    a fn ->
-    Format.formatter ->
-    unit =
- fun ~concurrency ~errno name fn fmt ->
+    type a. errno:errno_policy -> string -> a fn -> Format.formatter -> unit =
+ fun ~errno name fn fmt ->
   Format.fprintf fmt "@[|@ %s@ : (@[%a@])@ name@]@\n" name
     Emit_ML.ml_external_type
-    (ml_external_type_of_fn ~concurrency ~errno fn In)
+    (ml_external_type_of_fn ~errno fn In)
 
 let inverse_case ~register_name ~constructor name fmt fn : unit =
   let p, e =
