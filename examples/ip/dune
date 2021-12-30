@@ -35,7 +35,7 @@
  (modules cstubs_gen_sample)
  (foreign_stubs
   (language c)
-  (names ip_addr_pton cbuf_gen_c_sample)))
+  (names ip_addr_pton cbuf_gen_sample)))
 
 (executable
  (name ip)

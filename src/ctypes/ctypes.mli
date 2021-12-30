@@ -515,7 +515,7 @@ module type FOREIGN = sig
 
   val ( @-> ) : 'a typ -> 'b fn -> ('a -> 'b) fn
   val returning : 'a typ -> 'a return fn
-  val retbuf : 'a cbuffers -> 'a return fn
+  val retbuf : ('a, _) pointer cbuffers -> 'a fn
 
   type 'a result
 

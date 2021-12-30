@@ -57,8 +57,10 @@ and 'a ptr = ('a, [ `C ]) pointer
 and 'a ocaml = ('a, [ `OCaml ]) pointer
 
 and 'a cbuffers =
-  | LastBuf : int * 'a typ -> 'a cbuffers
-  | ConBuf : 'a cbuffers * 'b cbuffers -> ('a * 'b) cbuffers
+  | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
+  | ConBuf :
+      ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
+      -> ('a * 'c, [ `Mixed ]) pointer cbuffers
 
 and 'a static_funptr =
   | Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
@@ -92,7 +94,7 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns : 'a typ -> 'a fn
   | Function : 'a typ * 'b fn -> ('a -> 'b) fn
-  | Buffers : 'a cbuffers -> 'a fn
+  | Buffers : ('a, 'b) pointer cbuffers -> 'a fn
 
 type _ bigarray_class =
   | Genarray

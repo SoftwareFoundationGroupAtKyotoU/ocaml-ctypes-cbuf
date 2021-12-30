@@ -60,10 +60,7 @@ and ('a, 'b) view = ('a, 'b) Ctypes_static.view = {
   ty : 'b typ;
 }
 
-type 'a fn = 'a Ctypes_static.fn =
-  | Returns : 'a typ -> 'a fn
-  | Function : 'a typ * 'b fn -> ('a -> 'b) fn
-  | Buffers : 'a Ctypes_static.cbuffers -> 'a fn
+type 'a fn = 'a Ctypes_static.fn
 
 type 'a prim = 'a Ctypes_primitive_types.prim =
   | Char : char prim

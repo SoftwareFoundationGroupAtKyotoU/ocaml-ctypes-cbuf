@@ -8,10 +8,8 @@
 open Signed
 open Unsigned
 
-
 (** Abstract interface to C object type descriptions *)
-module type TYPE =
-sig
+module type TYPE = sig
   (** {2:types Values representing C types} *)
 
   type 'a typ
@@ -33,7 +31,7 @@ sig
 
   (** {3 The void type} *)
 
-  val void  : unit typ
+  val void : unit typ
   (** Value representing the C void type.  Void values appear in OCaml as the
       unit type, so using void in an argument or result type specification
       produces a function which accepts or returns unit.
@@ -68,13 +66,13 @@ sig
   val short : int typ
   (** Value representing the C type ([signed]) [short]. *)
 
-  val int   : int typ
+  val int : int typ
   (** Value representing the C type ([signed]) [int]. *)
 
-  val long  : long typ
+  val long : long typ
   (** Value representing the C type ([signed]) [long]. *)
 
-  val llong  : llong typ
+  val llong : llong typ
   (** Value representing the C type ([signed]) [long long]. *)
 
   val nativeint : nativeint typ
@@ -93,10 +91,12 @@ sig
   (** Value representing a 64-bit signed integer C type. *)
 
   module Intptr : Signed.S
+
   val intptr_t : Intptr.t typ
   (** Value representing the C type [intptr_t]. *)
 
   module Ptrdiff : Signed.S
+
   val ptrdiff_t : Ptrdiff.t typ
   (** Value representing the C type [ptrdiff_t]. *)
 
@@ -145,6 +145,7 @@ sig
   (** Value representing the C type [unsigned long long]. *)
 
   module Uintptr : Unsigned.S
+
   val uintptr_t : Uintptr.t typ
   (** Value representing the C type [uintptr_t]. *)
 
@@ -226,24 +227,30 @@ sig
   (** {4 Bigarray types} *)
 
   val bigarray :
-    < element: 'a;
-      layout: Bigarray_compat.c_layout;
-      ba_repr: 'b;
-      dims: 'dims;
-      bigarray: 'bigarray;
-      carray: _ > Ctypes_static.bigarray_class ->
-     'dims -> ('a, 'b) Bigarray_compat.kind -> 'bigarray typ
+    < element : 'a
+    ; layout : Bigarray_compat.c_layout
+    ; ba_repr : 'b
+    ; dims : 'dims
+    ; bigarray : 'bigarray
+    ; carray : _ >
+    Ctypes_static.bigarray_class ->
+    'dims ->
+    ('a, 'b) Bigarray_compat.kind ->
+    'bigarray typ
   (** Construct a sized C-layout bigarray type representation from a bigarray
       class, the dimensions, and the {!Bigarray_compat.kind}. *)
 
   val fortran_bigarray :
-    < element: 'a;
-      layout: Bigarray_compat.fortran_layout;
-      ba_repr: 'b;
-      dims: 'dims;
-      bigarray: 'bigarray;
-      carray: _ > Ctypes_static.bigarray_class ->
-     'dims -> ('a, 'b) Bigarray_compat.kind -> 'bigarray typ
+    < element : 'a
+    ; layout : Bigarray_compat.fortran_layout
+    ; ba_repr : 'b
+    ; dims : 'dims
+    ; bigarray : 'bigarray
+    ; carray : _ >
+    Ctypes_static.bigarray_class ->
+    'dims ->
+    ('a, 'b) Bigarray_compat.kind ->
+    'bigarray typ
   (** Construct a sized Fortran-layout bigarray type representation from a
       bigarray class, the dimensions, and the {!Bigarray_compat.kind}. *)
 
@@ -274,8 +281,11 @@ sig
   (** Construct a new union type.  This behaves analogously to {!structure};
       fields are added with {!field}. *)
 
-  val field : 't typ -> string -> 'a typ ->
-    ('a, (('s, [<`Struct | `Union]) Ctypes_static.structured as 't)) field
+  val field :
+    't typ ->
+    string ->
+    'a typ ->
+    ('a, (('s, [< `Struct | `Union ]) Ctypes_static.structured as 't)) field
   (** [field ty label ty'] adds a field of type [ty'] with label [label] to the
       structure or union type [ty] and returns a field value that can be used to
       read and write the field in structure or union instances (e.g. using
@@ -284,7 +294,7 @@ sig
       Attempting to add a field to a union type that has been sealed with [seal]
       is an error, and will raise {!ModifyingSealedType}. *)
 
-  val seal : (_, [< `Struct | `Union]) Ctypes_static.structured typ -> unit
+  val seal : (_, [< `Struct | `Union ]) Ctypes_static.structured typ -> unit
   (** [seal t] completes the struct or union type [t] so that no further fields
       can be added.  Struct and union types must be sealed before they can be used
       in a way that involves their size or alignment; see the documentation for
@@ -292,9 +302,13 @@ sig
 
   (** {3 View types} *)
 
-  val view : ?format_typ:((Format.formatter -> unit) -> Format.formatter -> unit) ->
-             ?format:(Format.formatter -> 'b -> unit) ->
-             read:('a -> 'b) -> write:('b -> 'a) -> 'a typ -> 'b typ
+  val view :
+    ?format_typ:((Format.formatter -> unit) -> Format.formatter -> unit) ->
+    ?format:(Format.formatter -> 'b -> unit) ->
+    read:('a -> 'b) ->
+    write:('b -> 'a) ->
+    'a typ ->
+    'b typ
   (** [view ~read:r ~write:w t] creates a C type representation [t'] which
       behaves like [t] except that values read using [t'] are subsequently
       transformed using the function [r] and values written using [t'] are first
@@ -330,7 +344,8 @@ sig
 
   (** {3 Abstract types} *)
 
-  val abstract : name:string -> size:int -> alignment:int -> 'a Ctypes_static.abstract typ
+  val abstract :
+    name:string -> size:int -> alignment:int -> 'a Ctypes_static.abstract typ
   (** Create an abstract type specification from the size and alignment
       requirements for the type. *)
 
@@ -347,6 +362,7 @@ sig
       needed. *)
 
   (** {3 Function types} *)
+
   (** Abstract interface to C function type descriptions *)
 
   type 'a fn = 'a Ctypes_static.fn
@@ -365,15 +381,22 @@ sig
       pointer to void -- and returns a float.
   *)
 
-  val ( @* ) : 'a cbuffers -> 'b cbuffers -> ('a * 'b) cbuffers
+  val ( @* ) :
+    ('a, 'b) Ctypes_static.pointer cbuffers ->
+    ('c, 'd) Ctypes_static.pointer cbuffers ->
+    ('a * 'c, [ `Mixed ]) Ctypes_static.pointer cbuffers
 
   val returning : 'a typ -> 'a fn
   (** Give the return type of a C function.  Note that [returning] is intended
       to be used together with {!(@->)}; see the documentation for {!(@->)} for an
       example. *)
 
-  val retbuf : 'a cbuffers -> 'a fn
-  val buffer : int -> 'a typ -> 'a cbuffers
+  val retbuf : ('a, _) Ctypes_static.pointer cbuffers -> 'a fn
+
+  val buffer :
+    int ->
+    ('a, 'b) Ctypes_static.pointer typ ->
+    ('a, 'b) Ctypes_static.pointer cbuffers
 
   (** {3 Function pointer types} *)
   type 'a static_funptr = 'a Ctypes_static.static_funptr

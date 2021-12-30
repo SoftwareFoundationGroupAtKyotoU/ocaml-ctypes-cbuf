@@ -172,7 +172,7 @@ module Generate_C = struct
   type _ fn =
     | Returns : 'a typ -> 'a fn
     | Function : string * 'a typ * 'b fn -> ('a -> 'b) fn
-    | Buffers : 'a cbuffers -> 'a fn
+    | Buffers : ('a, 'b) pointer cbuffers -> 'a fn
 
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
