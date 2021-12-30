@@ -18,7 +18,7 @@ type errno_policy = [ `Ignore_errno | `Return_errno ]
 type lident = string
 
 type ml_type =
-  [ `Ident of path
+  [ `Ident of path (* string list : Long identifiers *)
   | `Appl of path * ml_type list
   | `Pair of ml_type * ml_type
   | `Fn of ml_type * ml_type ]
@@ -292,6 +292,7 @@ let rec ml_typ_of_arg_typ : type a. a typ -> ml_type = function
             `Appl (path_of_string "array", [ `Ident (path_of_string "float") ]);
           ] )
 
+(* In: arg, Out: return *)
 type polarity = In | Out
 
 let flip = function In -> Out | Out -> In
@@ -313,9 +314,10 @@ let rec ml_external_type_of_fn :
   | Function (f, t), _ ->
       let (`Prim (l, t)) = ml_external_type_of_fn ~errno t polarity in
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
-  | Buffers _, _ ->
-      raise
-        (Unsupported "not implemented!(Cbuf_generate_ml.ml_external_type_of_fn)")
+  | Buffers b, _ -> (
+      match b with
+      | LastBuf (_, t) -> `Prim ([], ml_typ_of_typ polarity t)
+      | _ -> raise (Unsupported "not implemented!(cbuf_generate_ml)"))
 
 let var_counter = ref 0
 
@@ -573,6 +575,7 @@ let rec wrapper_body :
  fun ~concurrency ~errno fn exp pol binds ->
   match fn with
   | Returns t -> (
+      print_endline "wrapper_body | Returns";
       let exp = run_exp ~concurrency exp in
       match
         pattern_and_exp_of_typ ~concurrency ~errno t exp (flip pol) binds
@@ -594,6 +597,7 @@ let rec wrapper_body :
             pat = local_con "Returns" [ pat ];
           })
   | Function (f, t) -> (
+      print_endline "wrapper_body | Function";
       let x = fresh_var () in
       match
         pattern_and_exp_of_typ ~concurrency ~errno f

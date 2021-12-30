@@ -1,11 +1,11 @@
 (library
  (name bindings)
- (libraries ctypes)
+ (libraries ctypes str)
  (modules bindings))
 
 (executable
  (name bindgen)
- (libraries ctypes.stubs bindings ctypes.cbuf)
+ (libraries bindings ctypes.cbuf)
  (modules bindgen))
 
 (rule
