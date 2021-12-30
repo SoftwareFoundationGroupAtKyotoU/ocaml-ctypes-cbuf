@@ -10,9 +10,10 @@ type 'a return = 'a
 type 'a fn =
  | Returns  : 'a CI.typ   -> 'a return fn
  | Function : 'a CI.typ * 'b fn  -> ('a -> 'b) fn
- | Buffers  : 'a Ctypes_static.cbuffers -> 'a fn (* TODO: *)
+ | Buffers  : 'a CI.cbuffers -> 'a return fn (* TODO: *)
 let map_result f x = f x
 let returning t = Returns t
+let retbuf b = Buffers b
 let (@->) f p = Function (f, p)
 let foreign : type a b. string -> (a -> b) fn -> (a -> b) =
   fun name t -> match t, name with
