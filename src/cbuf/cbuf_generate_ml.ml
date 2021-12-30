@@ -316,7 +316,7 @@ let rec ml_external_type_of_fn :
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
   | Buffers b, _ -> (
       match b with
-      | LastBuf (_, t) -> `Prim ([], ml_typ_of_typ polarity t)
+      | LastBuf (_, t) -> `Prim ([], ml_typ_of_typ (flip polarity) t)
       | _ -> raise (Unsupported "not implemented!(cbuf_generate_ml)"))
 
 let var_counter = ref 0
@@ -575,7 +575,6 @@ let rec wrapper_body :
  fun ~concurrency ~errno fn exp pol binds ->
   match fn with
   | Returns t -> (
-      print_endline "wrapper_body | Returns";
       let exp = run_exp ~concurrency exp in
       match
         pattern_and_exp_of_typ ~concurrency ~errno t exp (flip pol) binds
@@ -597,7 +596,6 @@ let rec wrapper_body :
             pat = local_con "Returns" [ pat ];
           })
   | Function (f, t) -> (
-      print_endline "wrapper_body | Function";
       let x = fresh_var () in
       match
         pattern_and_exp_of_typ ~concurrency ~errno f
@@ -629,7 +627,7 @@ let rec wrapper_body :
             pat = local_con "Function" [ fpat; tpat ];
           })
   | Buffers _ ->
-      raise (Unsupported "not implemented!(Cbuf_generate_ml.wrapper_body)")
+      { exp; args = []; trivial = true; binds; pat = local_con "Buffers" [] }
 
 let lwt_bind = Cbuf_path.path_of_string "Lwt.bind"
 let lwt_return = Cbuf_path.path_of_string "Lwt.return"

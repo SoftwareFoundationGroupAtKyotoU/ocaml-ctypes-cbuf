@@ -114,5 +114,4 @@ let rec may_allocate : type a. a fn -> bool = function
   | Returns t -> (
       match allocation t with `Noalloc _ -> false | `Alloc _ -> true)
   | Function (_, t) -> may_allocate t
-  | Buffers _ ->
-      raise (Unsupported "not implemented(Cbuf_analysis.may_allocate)")
+  | Buffers _ -> false
