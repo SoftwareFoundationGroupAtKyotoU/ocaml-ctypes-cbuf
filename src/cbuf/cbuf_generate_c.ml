@@ -186,12 +186,18 @@ module Generate_C = struct
     | Ctypes_static.Buffers b -> (
         match b with
         | LastBuf (i, t) -> Buffers (LastBuf (fresh_var (), i, t))
-        | ConBuf _ -> raise (Unsupported "not implemented!"))
+        | ConBuf _ ->
+            raise (Unsupported "not implemented!(Cbuf_generate_c.name_params)"))
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
-    | Buffers _b -> []
+    | Buffers b -> (
+        match b with
+        | LastBuf (x, _, _) -> [ (x, Ty value) ]
+        | ConBuf _ ->
+            raise (Unsupported "not implemented!(Cbuf_generate_c.value_params)")
+        )
 
   let fundec : type a. string -> a Ctypes.fn -> cfundec =
    fun name fn -> `Fundec (name, args fn, return_type fn)
