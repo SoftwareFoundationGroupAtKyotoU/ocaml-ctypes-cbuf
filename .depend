@@ -37,8 +37,8 @@ _build/examples/ip/bindings.cmo : _build/src/ctypes/ctypes.cmi
 _build/examples/ip/bindings.cmx : _build/src/ctypes/ctypes.cmx
 _build/examples/ip/cstubs_gen_sample.cmo : _build/src/ctypes/ctypes.cmi _build/src/ctypes/cstubs_internals.cmi
 _build/examples/ip/cstubs_gen_sample.cmx : _build/src/ctypes/ctypes.cmx _build/src/ctypes/cstubs_internals.cmx
-_build/examples/ip/ip.cmo : _build/src/ctypes/ctypes.cmi
-_build/examples/ip/ip.cmx : _build/src/ctypes/ctypes.cmx
+_build/examples/ip/ip.cmo :
+_build/examples/ip/ip.cmx :
 _build/examples/ncurses/foreign/ncurses.cmi :
 _build/examples/ncurses/foreign/ncurses.cmo : _build/src/ctypes-foreign/foreign.cmi _build/src/ctypes/ctypes.cmi _build/examples/ncurses/foreign/ncurses.cmi
 _build/examples/ncurses/foreign/ncurses.cmx : _build/src/ctypes-foreign/foreign.cmx _build/src/ctypes/ctypes.cmx _build/examples/ncurses/foreign/ncurses.cmi

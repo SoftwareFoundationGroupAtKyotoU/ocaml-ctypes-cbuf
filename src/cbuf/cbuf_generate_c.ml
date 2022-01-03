@@ -169,6 +169,12 @@ module Generate_C = struct
     | Bigarray _ -> report_unpassable "bigarrays"
     | OCaml _ -> report_unpassable "ocaml references as return values"
 
+  type _ cbuffers =
+    | LastBuf : string * int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
+    | ConBuf :
+        ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
+        -> ('a * 'c, [ `Mixed ]) pointer cbuffers
+
   type _ fn =
     | Returns : 'a typ -> 'a fn
     | Function : string * 'a typ * 'b fn -> ('a -> 'b) fn
@@ -177,8 +183,10 @@ module Generate_C = struct
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Ctypes_static.Buffers b -> Buffers b
-  (* 型変数aを変えることができないのでここではBuffer bのまま *)
+    | Ctypes_static.Buffers b -> (
+        match b with
+        | LastBuf (i, t) -> Buffers (LastBuf (fresh_var (), i, t))
+        | ConBuf _ -> raise (Unsupported "not implemented!"))
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
@@ -219,8 +227,7 @@ module Generate_C = struct
           match prj f (local x value) with
           | None -> body vars t
           | Some projected -> (projected, f) >>= fun x' -> body (x' :: vars) t)
-      | Buffers (LastBuf (_, t)) ->
-          body vars (Function ("hoge", t, Returns int))
+      | Buffers (LastBuf (x, _, t)) -> body vars (Function (x, t, Returns int))
       | _ -> raise (Unsupported "not implemented!(Cbuf_generate_c.fn)")
     in
     let f' = name_params f in
