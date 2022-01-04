@@ -522,7 +522,6 @@ let rec pattern_and_exp_of_typ :
 
 (* Build a pattern (without variables) that matches the argument *)
 let rec pattern_of_typ : type a. a typ -> ml_pat = function
-  (* MEMO: これなに？ *)
   | Void -> static_con "Void" []
   | Primitive p ->
       let id =
@@ -552,6 +551,19 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
         "Unexpected abstract type encountered during ML code generation: %s"
         (Ctypes.string_of_typ ty)
 
+let pattern_of_cbuffers : type a. a cbuffers -> ml_exp -> polarity -> ml_pat =
+ fun buf e pol ->
+  match buf with
+  | LastBuf (i, t) ->
+      let pat, _, _ =
+        pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t e
+          pol []
+      in
+      local_con "LastBuf" [ `Var (string_of_int i); pat ]
+  | ConBuf _ ->
+      raise
+        (Unsupported "not implemented!(Cbuf_generate_ml.pattern_of_cbuffers!)")
+
 type wrapper_state = {
   pat : ml_pat;
   exp : ml_exp;
@@ -574,12 +586,14 @@ let let_bind : (ml_pat * ml_exp) list -> ml_exp -> ml_exp =
  fun binds e ->
   ListLabels.fold_left ~init:e binds ~f:(fun e' (x, e) -> `Let (x, e, e'))
 
+(* foreignのパターンマッチの情報を生成する *)
 let rec wrapper_body :
     type a.
     concurrency:concurrency_policy ->
     errno:errno_policy ->
     a fn ->
     ml_exp ->
+    (* ml_exp: external_name *)
     polarity ->
     (ml_pat * ml_exp) list ->
     wrapper_state =
@@ -637,8 +651,14 @@ let rec wrapper_body :
             binds;
             pat = local_con "Function" [ fpat; tpat ];
           })
-  | Buffers _ ->
-      { exp; args = []; trivial = true; binds; pat = local_con "Buffers" [] }
+  | Buffers buf ->
+      {
+        exp;
+        args = [];
+        trivial = true;
+        binds;
+        pat = local_con "Buffers" [ pattern_of_cbuffers buf exp pol ];
+      }
 
 let lwt_bind = Cbuf_path.path_of_string "Lwt.bind"
 let lwt_return = Cbuf_path.path_of_string "Lwt.return"
@@ -677,6 +697,7 @@ let wrapper :
     path ->
     a fn ->
     string ->
+    (* string: external_name *)
     polarity ->
     ml_pat * ml_exp =
  fun ~concurrency ~errno id fn f pol ->
@@ -688,6 +709,7 @@ let wrapper :
       (pat, let_bind binds (run_exp ~concurrency (`Ident id)))
   | { exp; args; pat; binds; _ }, #non_lwt ->
       (pat, `Fun (args, let_bind binds exp))
+  (* 以下のパターンはasync *)
   | { trivial = true; pat; args; binds; _ }, #lwt ->
       let exp : ml_exp =
         List.fold_left
