@@ -9,25 +9,17 @@
  (modules bindgen))
 
 (rule
- (targets 
- cbuf_gen.c
- cbuf_gen.ml
- )
+ (targets cbuf_gen.c cbuf_gen.ml)
  (action
   (run ./bindgen.exe)))
 
-; (library
-;  (name cstubs_gen)
-;  (libraries ctypes)
-;  (modules cstubs_gen)
-;  (foreign_stubs
-;   (language c)
-;   (names ip_addr_pton cstubs_gen)))
-
-; (library
-;  (name cbuf_gen)
-;  (libraries ctypes generated)
-;  (modules cbuf_gen))
+(library
+ (name cbuf_gen)
+ (libraries ctypes)
+ (modules cbuf_gen)
+ (foreign_stubs
+  (language c)
+  (names cbuf_gen)))
 
 (library
  (name cstubs_gen_sample)
@@ -35,7 +27,7 @@
  (modules cstubs_gen_sample)
  (foreign_stubs
   (language c)
-  (names ip_addr_pton cbuf_gen)))
+  (names ip_addr_pton cbuf_gen_sample)))
 
 (executable
  (name ip)

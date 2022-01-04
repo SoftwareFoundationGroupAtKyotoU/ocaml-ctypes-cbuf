@@ -85,6 +85,7 @@ let write_foreign ~concurrency ~errno fmt bindings val_bindings =
   write_fn ~concurrency ~errno fmt;
   write_map_result ~concurrency ~errno fmt;
   Format.fprintf fmt "let returning t = Returns t@\n";
+  Format.fprintf fmt "let retbuf b = Buffers b@\n";
   Format.fprintf fmt "let (@@->) f p = Function (f, p)@\n";
   Format.fprintf fmt
     "let foreign : type a b. string -> (a -> b) fn -> (a -> b) =@\n";
