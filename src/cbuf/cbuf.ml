@@ -160,7 +160,7 @@ let write_c ?(errno = `Ignore_errno) fmt ~prefix (module B : BINDINGS) =
 let write_ml ?(concurrency = `Sequential) ?(errno = `Ignore_errno) fmt ~prefix
     (module B : BINDINGS) =
   let foreign, finally = gen_ml ~concurrency ~errno prefix fmt in
-  let () = Format.fprintf fmt "module CI = Cbuf_internals@\n@\n" in
+  let () = Format.fprintf fmt "module CI = Cstubs_internals@\n@\n" in
   let module M = B ((val foreign)) in
   finally ()
 

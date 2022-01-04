@@ -304,6 +304,19 @@ let ml_typ_of_typ = function
 let lwt_job_type = Cbuf_path.path_of_string "Lwt_unix.job"
 let int_type = `Ident (Cbuf_path.path_of_string "Signed.sint")
 
+let rec ml_external_type_of_cbuffers :
+    type a. a cbuffers -> polarity -> ml_external_type =
+ fun buf polarity ->
+  match buf with
+  | LastBuf (_, t) -> `Prim ([ ml_typ_of_typ (flip polarity) t ], int_type)
+  | ConBuf (b1, b2) -> (
+      match b1 with
+      | LastBuf (_, t1) ->
+          let (`Prim (l2, t2)) = ml_external_type_of_cbuffers b2 polarity in
+          `Prim (ml_typ_of_typ (flip polarity) t1 :: l2, t2)
+      | ConBuf _ -> raise (Unsupported "left arg shouldn't be ConBuf"))
+
+(* externでバインドするCの関数の型 *)
 let rec ml_external_type_of_fn :
     type a. errno:errno_policy -> a fn -> polarity -> ml_external_type =
  fun ~errno fn polarity ->
@@ -314,10 +327,7 @@ let rec ml_external_type_of_fn :
   | Function (f, t), _ ->
       let (`Prim (l, t)) = ml_external_type_of_fn ~errno t polarity in
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
-  | Buffers b, _ -> (
-      match b with
-      | LastBuf (_, t) -> `Prim ([], ml_typ_of_typ (flip polarity) t)
-      | _ -> raise (Unsupported "not implemented!(cbuf_generate_ml)"))
+  | Buffers b, _ -> ml_external_type_of_cbuffers b polarity
 
 let var_counter = ref 0
 
@@ -325,6 +335,7 @@ let fresh_var () =
   incr var_counter;
   Printf.sprintf "x%d" !var_counter
 
+(* external を出力 *)
 let extern ~errno ~stub_name ~external_name fmt fn =
   let ext =
     let typ = ml_external_type_of_fn ~errno fn Out in
