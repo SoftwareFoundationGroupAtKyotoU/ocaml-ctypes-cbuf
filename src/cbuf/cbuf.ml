@@ -64,7 +64,8 @@ let write_fn ~concurrency ~errno fmt =
   let _ = concurrency and _ = errno in
   Format.fprintf fmt "type 'a fn =@\n";
   Format.fprintf fmt " | Returns  : 'a CI.typ   -> 'a return fn@\n";
-  Format.fprintf fmt " | Function : 'a CI.typ * 'b fn  -> ('a -> 'b) fn@\n"
+  Format.fprintf fmt " | Function : 'a CI.typ * 'b fn  -> ('a -> 'b) fn@\n";
+  Format.fprintf fmt " | Buffers : ('a, 'b) CI.pointer CI.cbuffers -> 'a fn@\n"
 
 let write_map_result ~concurrency ~errno fmt =
   match (concurrency, errno) with
