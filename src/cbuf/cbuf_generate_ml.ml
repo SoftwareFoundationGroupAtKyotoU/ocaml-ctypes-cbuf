@@ -34,16 +34,17 @@ type ml_pat =
 
 type ml_exp =
   [ `Ident of path
-  | `Project of ml_exp * path
+  | `Project of ml_exp * path (* ml_exp.path *)
   | `MakePtr of ml_exp * ml_exp
   | `MakeFunPtr of ml_exp * ml_exp
   | `MakeStructured of ml_exp * ml_exp
-  | `Appl of ml_exp * ml_exp
+  | `Appl of ml_exp * ml_exp (* 適用? *)
   | `Tuple of ml_exp list
   | `Seq of ml_exp * ml_exp
   | `Let of ml_pat * ml_exp * ml_exp
   | `Unit
-  | `Fun of lident list * ml_exp ]
+  | `Fun of lident list * ml_exp
+  | `Const of string ]
 
 type attributes = { float : bool; noalloc : bool }
 
@@ -168,6 +169,7 @@ end = struct
     | NoApplParens, `Let (p, e1, e2) ->
         fprintf fmt "@[let@ %a@ = %a@ in@ %a@]" (ml_pat NoApplParens) p
           (ml_exp NoApplParens) e1 (ml_exp NoApplParens) e2
+    | _, `Const s -> fprintf fmt "@[%s@]" s
 
   and tuple_elements fmt : ml_exp list -> unit =
    fun xs ->
@@ -551,18 +553,33 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
         "Unexpected abstract type encountered during ML code generation: %s"
         (Ctypes.string_of_typ ty)
 
-let pattern_of_cbuffers : type a. a cbuffers -> ml_exp -> polarity -> ml_pat =
- fun buf e pol ->
+let pattern_of_cbuffers :
+    type a.
+    a cbuffers ->
+    ml_exp ->
+    polarity ->
+    (ml_pat * ml_exp) list ->
+    ml_pat * (ml_pat * ml_exp) list =
+ fun buf e pol binds ->
   match buf with
   | LastBuf (i, t) ->
       let pat, _, _ =
         pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t e
           pol []
       in
-      local_con "LastBuf" [ `Var (string_of_int i); pat ]
+      let buf_var = fresh_var () in
+      ( local_con "LastBuf" [ `Var (string_of_int i); pat ],
+        binds
+        @ [
+            ( local_con "bytes" [ `Var buf_var ],
+              `Appl
+                ( `Ident (path_of_string "Bytes.create"),
+                  `Const (string_of_int i) ) );
+          ] )
   | ConBuf _ ->
       raise
         (Unsupported "not implemented!(Cbuf_generate_ml.pattern_of_cbuffers!)")
+(* TODO: *)
 
 type wrapper_state = {
   pat : ml_pat;
@@ -652,12 +669,13 @@ let rec wrapper_body :
             pat = local_con "Function" [ fpat; tpat ];
           })
   | Buffers buf ->
+      let pat, binds = pattern_of_cbuffers buf exp pol binds in
       {
-        exp;
+        exp = `Project (exp, path_of_string "path");
         args = [];
         trivial = true;
         binds;
-        pat = local_con "Buffers" [ pattern_of_cbuffers buf exp pol ];
+        pat = local_con "Buffers" [ pat ];
       }
 
 let lwt_bind = Cbuf_path.path_of_string "Lwt.bind"
