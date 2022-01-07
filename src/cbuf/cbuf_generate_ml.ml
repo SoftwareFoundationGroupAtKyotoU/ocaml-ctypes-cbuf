@@ -559,7 +559,7 @@ let pattern_of_cbuffers :
     ml_exp ->
     polarity ->
     (ml_pat * ml_exp) list ->
-    ml_pat * (ml_pat * ml_exp) list =
+    ml_pat * ml_exp * (ml_pat * ml_exp) list =
  fun buf e pol binds ->
   match buf with
   | LastBuf (i, t) ->
@@ -569,9 +569,17 @@ let pattern_of_cbuffers :
       in
       let buf_var = fresh_var () in
       ( local_con "LastBuf" [ `Var (string_of_int i); pat ],
+        `Let
+          ( `Var "_",
+            `Appl
+              ( e,
+                `Appl
+                  ( `Ident (path_of_string "Ctypes.ocaml_bytes_start"),
+                    `Ident (path_of_string buf_var) ) ),
+            `Ident (path_of_string buf_var) ),
         binds
         @ [
-            ( local_con "bytes" [ `Var buf_var ],
+            ( `Var buf_var,
               `Appl
                 ( `Ident (path_of_string "Bytes.create"),
                   `Const (string_of_int i) ) );
@@ -669,9 +677,9 @@ let rec wrapper_body :
             pat = local_con "Function" [ fpat; tpat ];
           })
   | Buffers buf ->
-      let pat, binds = pattern_of_cbuffers buf exp pol binds in
+      let pat, exp, binds = pattern_of_cbuffers buf exp pol binds in
       {
-        exp = `Project (exp, path_of_string "path");
+        exp;
         args = [];
         trivial = true;
         binds;

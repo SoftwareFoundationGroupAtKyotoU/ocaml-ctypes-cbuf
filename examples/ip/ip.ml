@@ -1,4 +1,4 @@
-module C = Bindings.C(Cstubs_gen_sample)
+module C = Bindings.C(Cbuf_gen)
 
 exception IP_addr_error
 let () =
