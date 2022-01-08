@@ -29,3 +29,9 @@ int int_as_buffer(int *i) {
   *i = 10;
   return 0;
 }
+
+int multi_buffer(uint64_t in, uint64_t *out1, uint64_t *out2) {
+  *out1 = in;
+  *out2 = in << 1;
+  return 0;
+}

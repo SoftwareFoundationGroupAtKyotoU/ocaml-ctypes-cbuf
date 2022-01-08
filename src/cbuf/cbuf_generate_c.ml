@@ -53,6 +53,7 @@ module Generate_C = struct
            y := e1; let x = e2 in e3 *)
         let (Ty t) = Type_C.ccomp c in
         `LetAssign (lv, v, (c, t) >>= k)
+    | _ -> raise (Unsupported "not implemented!(Cbuf_generate_c.(>>=))")
 
   let ( >> ) c1 c2 = (c1, Void) >>= fun _ -> c2
 
@@ -183,21 +184,26 @@ module Generate_C = struct
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Ctypes_static.Buffers b -> (
-        match b with
-        | LastBuf (i, t) -> Buffers (LastBuf (fresh_var (), i, t))
-        | ConBuf _ ->
-            raise (Unsupported "not implemented!(Cbuf_generate_c.name_params)"))
+    | Ctypes_static.Buffers b ->
+        let rec name_params_of_cbuffers :
+            type a. a Ctypes_static.cbuffers -> a cbuffers = function
+          | LastBuf (i, t) -> LastBuf (fresh_var (), i, t)
+          | ConBuf (b1, b2) ->
+              ConBuf (name_params_of_cbuffers b1, name_params_of_cbuffers b2)
+        in
+        Buffers (name_params_of_cbuffers b)
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
-    | Buffers b -> (
-        match b with
-        | LastBuf (x, _, _) -> [ (x, Ty value) ]
-        | ConBuf _ ->
-            raise (Unsupported "not implemented!(Cbuf_generate_c.value_params)")
-        )
+    | Buffers b ->
+        let rec value_params_of_cbuffers :
+            type a. a cbuffers -> (string * ty) list = function
+          | LastBuf (x, _, _) -> [ (x, Ty value) ]
+          | ConBuf (b1, b2) ->
+              value_params_of_cbuffers b1 @ value_params_of_cbuffers b2
+        in
+        value_params_of_cbuffers b
 
   let fundec : type a. string -> a Ctypes.fn -> cfundec =
    fun name fn -> `Fundec (name, args fn, return_type fn)
@@ -213,11 +219,11 @@ module Generate_C = struct
     let fvar =
       { fname = cname; allocates = false; reads_ocaml_heap = false; fn = Fn f }
     in
-    let rec body : type a. _ -> a fn -> _ =
+    let rec body : type a. cexp list -> a fn -> ccomp =
      fun vars -> function
       | Returns t -> (
           let x = fresh_var () in
-          let e = `App (fvar, (List.rev vars :> cexp list)) in
+          let e = `App (fvar, List.rev vars) in
           match errno_ with
           | `Ignore_errno -> `Let ((local x t, e), (inj t (local x t) :> ccomp))
           | `Return_errno ->
@@ -233,8 +239,19 @@ module Generate_C = struct
           match prj f (local x value) with
           | None -> body vars t
           | Some projected -> (projected, f) >>= fun x' -> body (x' :: vars) t)
-      | Buffers (LastBuf (x, _, t)) -> body vars (Function (x, t, Returns int))
-      | _ -> raise (Unsupported "not implemented!(Cbuf_generate_c.fn)")
+      | Buffers b ->
+          let rec body_for_cbuffers : type a. cexp list -> a cbuffers -> ccomp =
+           fun vars -> function
+            | LastBuf (x, _, t) -> body vars (Function (x, t, Returns int))
+            | ConBuf (LastBuf (x, _, f), t) -> (
+                match prj f (local x value) with
+                | None -> body_for_cbuffers vars t
+                | Some projected ->
+                    (projected, f) >>= fun x' ->
+                    body_for_cbuffers (x' :: vars) t)
+            | _ -> raise (Unsupported "not implemented!(Cbuf_generate_c.fn)")
+          in
+          body_for_cbuffers vars b
     in
     let f' = name_params f in
     let vp = value_params f' in
