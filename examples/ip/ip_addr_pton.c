@@ -30,8 +30,9 @@ int int_as_buffer(int *i) {
   return 0;
 }
 
-int multi_buffer(uint64_t in, uint64_t *out1, uint64_t *out2) {
+int multi_buffer(uint64_t in, uint64_t *out1, uint64_t *out2, uint64_t *out3) {
   *out1 = in;
   *out2 = in << 1;
+  *out3 = in << 2;
   return 0;
 }
