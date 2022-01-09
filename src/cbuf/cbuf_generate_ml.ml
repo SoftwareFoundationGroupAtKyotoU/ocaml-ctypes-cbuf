@@ -553,7 +553,7 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
         "Unexpected abstract type encountered during ML code generation: %s"
         (Ctypes.string_of_typ ty)
 
-let pattern_of_cbuffers :
+let rec pattern_of_cbuffers :
     type a.
     a cbuffers ->
     ml_exp ->
@@ -584,10 +584,30 @@ let pattern_of_cbuffers :
                 ( `Ident (path_of_string "Bytes.create"),
                   `Const (string_of_int i) ) );
           ] )
-  | ConBuf _ ->
-      raise
-        (Unsupported "not implemented!(Cbuf_generate_ml.pattern_of_cbuffers!)")
-(* TODO: *)
+  | ConBuf (LastBuf (i, t), b) ->
+      let pat, _, _ =
+        pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t e
+          pol []
+      in
+      let buf_var = fresh_var () in
+      let e1 =
+        `Appl
+          ( e,
+            `Appl
+              ( `Ident (path_of_string "Ctypes.ocaml_bytes_start"),
+                `Ident (path_of_string buf_var) ) )
+      in
+      let pat2, e2, binds2 = pattern_of_cbuffers b e1 pol binds in
+      ( local_con "ConBuf"
+          [ local_con "LastBuf" [ `Var (string_of_int i); pat ]; pat2 ],
+        e2,
+        binds
+        @ ( `Var buf_var,
+            `Appl
+              (`Ident (path_of_string "Bytes.create"), `Const (string_of_int i))
+          )
+          :: binds2 )
+  | _ -> raise (Unsupported "left arg should be LastBuf")
 
 type wrapper_state = {
   pat : ml_pat;
@@ -681,7 +701,7 @@ let rec wrapper_body :
       {
         exp;
         args = [];
-        trivial = true;
+        trivial = false;
         binds;
         pat = local_con "Buffers" [ pat ];
       }
