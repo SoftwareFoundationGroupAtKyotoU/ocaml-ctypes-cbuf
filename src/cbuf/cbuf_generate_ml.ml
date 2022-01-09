@@ -553,61 +553,66 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
         "Unexpected abstract type encountered during ML code generation: %s"
         (Ctypes.string_of_typ ty)
 
-let rec pattern_of_cbuffers :
-    type a.
-    a cbuffers ->
-    ml_exp ->
-    polarity ->
-    (ml_pat * ml_exp) list ->
-    ml_pat * ml_exp * (ml_pat * ml_exp) list =
- fun buf e pol binds ->
-  match buf with
-  | LastBuf (i, t) ->
-      let pat, _, _ =
-        pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t e
-          pol []
-      in
-      let buf_var = fresh_var () in
-      ( local_con "LastBuf" [ `Var (string_of_int i); pat ],
-        `Let
-          ( `Var "_",
-            `Appl
-              ( e,
+type buf_exp = ml_exp
+
+let pattern_and_exp_of_cbuffers buf e binds =
+  let rec pattern_and_exp_of_cbuffers2 :
+      type a.
+      a cbuffers ->
+      ml_exp ->
+      (ml_pat * ml_exp) list ->
+      ml_pat * ml_exp * buf_exp * (ml_pat * ml_exp) list =
+   fun buf e binds ->
+    match buf with
+    | LastBuf (i, t) ->
+        let pat, _, _ =
+          pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t
+            e In []
+        in
+        let buf_var = fresh_var () in
+        ( local_con "LastBuf" [ `Var (string_of_int i); pat ],
+          `Appl
+            ( e,
+              `Appl
+                ( `Ident (path_of_string "Ctypes.ocaml_bytes_start"),
+                  `Ident (path_of_string buf_var) ) ),
+          `Ident (path_of_string buf_var),
+          binds
+          @ [
+              ( `Var buf_var,
                 `Appl
-                  ( `Ident (path_of_string "Ctypes.ocaml_bytes_start"),
-                    `Ident (path_of_string buf_var) ) ),
-            `Ident (path_of_string buf_var) ),
-        binds
-        @ [
-            ( `Var buf_var,
+                  ( `Ident (path_of_string "Bytes.create"),
+                    `Const (string_of_int i) ) );
+            ] )
+    | ConBuf (LastBuf (i, t), b) ->
+        let pat, _, _ =
+          pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t
+            e In []
+        in
+        let buf_var = fresh_var () in
+        let e1 =
+          `Appl
+            ( e,
+              `Appl
+                ( `Ident (path_of_string "Ctypes.ocaml_bytes_start"),
+                  `Ident (path_of_string buf_var) ) )
+        in
+        let pat2, e2, be, binds2 = pattern_and_exp_of_cbuffers2 b e1 binds in
+        let be = `Tuple [ `Ident (path_of_string buf_var); be ] in
+        ( local_con "ConBuf"
+            [ local_con "LastBuf" [ `Var (string_of_int i); pat ]; pat2 ],
+          e2,
+          be,
+          binds
+          @ ( `Var buf_var,
               `Appl
                 ( `Ident (path_of_string "Bytes.create"),
-                  `Const (string_of_int i) ) );
-          ] )
-  | ConBuf (LastBuf (i, t), b) ->
-      let pat, _, _ =
-        pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno t e
-          pol []
-      in
-      let buf_var = fresh_var () in
-      let e1 =
-        `Appl
-          ( e,
-            `Appl
-              ( `Ident (path_of_string "Ctypes.ocaml_bytes_start"),
-                `Ident (path_of_string buf_var) ) )
-      in
-      let pat2, e2, binds2 = pattern_of_cbuffers b e1 pol binds in
-      ( local_con "ConBuf"
-          [ local_con "LastBuf" [ `Var (string_of_int i); pat ]; pat2 ],
-        e2,
-        binds
-        @ ( `Var buf_var,
-            `Appl
-              (`Ident (path_of_string "Bytes.create"), `Const (string_of_int i))
-          )
-          :: binds2 )
-  | _ -> raise (Unsupported "left arg should be LastBuf")
+                  `Const (string_of_int i) ) )
+            :: binds2 )
+    | _ -> raise (Unsupported "left arg should be LastBuf")
+  in
+  let pat, exp, be, binds = pattern_and_exp_of_cbuffers2 buf e binds in
+  (pat, `Let (`Var "_", exp, be), binds)
 
 type wrapper_state = {
   pat : ml_pat;
@@ -697,7 +702,7 @@ let rec wrapper_body :
             pat = local_con "Function" [ fpat; tpat ];
           })
   | Buffers buf ->
-      let pat, exp, binds = pattern_of_cbuffers buf exp pol binds in
+      let pat, exp, binds = pattern_and_exp_of_cbuffers buf exp binds in
       {
         exp;
         args = [];
