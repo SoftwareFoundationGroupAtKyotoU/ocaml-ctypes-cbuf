@@ -184,7 +184,8 @@ module Generate_C = struct
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Ctypes_static.Buffers b ->
+    | Ctypes_static.Buffers (_, b) ->
+        (* TODO: consider cposition *)
         let rec name_params_of_cbuffers :
             type a. a Ctypes_static.cbuffers -> a cbuffers = function
           | LastBuf (i, t) -> LastBuf (fresh_var (), i, t)

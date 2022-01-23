@@ -65,7 +65,8 @@ let write_fn ~concurrency ~errno fmt =
   Format.fprintf fmt "type 'a fn =@\n";
   Format.fprintf fmt " | Returns  : 'a CI.typ   -> 'a return fn@\n";
   Format.fprintf fmt " | Function : 'a CI.typ * 'b fn  -> ('a -> 'b) fn@\n";
-  Format.fprintf fmt " | Buffers : ('a, 'b) CI.pointer CI.cbuffers -> 'a fn@\n"
+  Format.fprintf fmt
+    " | Buffers : CI.cposition * ('a, 'b) CI.pointer CI.cbuffers -> 'a fn@\n"
 
 let write_map_result ~concurrency ~errno fmt =
   match (concurrency, errno) with
@@ -85,7 +86,8 @@ let write_foreign ~concurrency ~errno fmt bindings val_bindings =
   write_fn ~concurrency ~errno fmt;
   write_map_result ~concurrency ~errno fmt;
   Format.fprintf fmt "let returning t = Returns t@\n";
-  Format.fprintf fmt "let retbuf b = Buffers b@\n";
+  Format.fprintf fmt
+    "let retbuf ?(cposition = `Last) b = Buffers (cposition, b)@\n";
   Format.fprintf fmt "let (@@->) f p = Function (f, p)@\n";
   Format.fprintf fmt
     "let foreign : type a b. string -> (a -> b) fn -> (a -> b) =@\n";

@@ -329,7 +329,8 @@ let rec ml_external_type_of_fn :
   | Function (f, t), _ ->
       let (`Prim (l, t)) = ml_external_type_of_fn ~errno t polarity in
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
-  | Buffers b, _ -> ml_external_type_of_cbuffers b polarity
+  | Buffers (_, b), _ -> ml_external_type_of_cbuffers b polarity
+(* TODO: consider cposition *)
 
 let var_counter = ref 0
 
@@ -701,7 +702,8 @@ let rec wrapper_body :
             binds;
             pat = local_con "Function" [ fpat; tpat ];
           })
-  | Buffers buf ->
+  | Buffers (_, buf) ->
+      (* TODO: consider cposition *)
       let pat, exp, binds = pattern_and_exp_of_cbuffers buf exp binds in
       {
         exp;

@@ -391,7 +391,10 @@ module type TYPE = sig
       to be used together with {!(@->)}; see the documentation for {!(@->)} for an
       example. *)
 
-  val retbuf : ('a, _) Ctypes_static.pointer cbuffers -> 'a fn
+  val retbuf :
+    ?cposition:Ctypes_static.cposition ->
+    ('a, _) Ctypes_static.pointer cbuffers ->
+    'a fn
 
   val buffer :
     int ->

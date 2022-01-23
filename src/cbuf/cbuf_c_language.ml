@@ -67,7 +67,8 @@ type cfundef = [ `Function of cfundec * ccomp * storage_class ]
 let rec return_type : type a. a fn -> ty = function
   | Function (_, f) -> return_type f
   | Returns t -> Ty t
-  | Buffers b -> BufTy b
+  | Buffers (_, b) -> BufTy b
+(* TODO: consider cposition *)
 
 let args : type a. a fn -> (string * ty) list =
  fun fn ->

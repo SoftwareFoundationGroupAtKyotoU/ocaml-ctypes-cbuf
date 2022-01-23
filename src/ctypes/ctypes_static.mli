@@ -16,6 +16,7 @@ type _ ocaml_type =
 
 type incomplete_size = { mutable isize : int }
 type structured_spec = { size : int; align : int }
+type cposition = [ `First | `Last ]
 
 type 'a structspec =
   | Incomplete of incomplete_size
@@ -86,7 +87,7 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns : 'a typ -> 'a fn
   | Function : 'a typ * 'b fn -> ('a -> 'b) fn
-  | Buffers : ('a, 'b) pointer cbuffers -> 'a fn
+  | Buffers : cposition * ('a, 'b) pointer cbuffers -> 'a fn
 
 type _ bigarray_class =
   | Genarray
@@ -211,7 +212,7 @@ val fortran_bigarray :
 
 val returning : 'a typ -> 'a fn
 val static_funptr : 'a fn -> 'a static_funptr typ
-val retbuf : ('a, _) pointer cbuffers -> 'a fn
+val retbuf : ?cposition:cposition -> ('a, _) pointer cbuffers -> 'a fn
 val structure : string -> 'a structure typ
 val union : string -> 'a union typ
 val offsetof : ('a, 'b) field -> int

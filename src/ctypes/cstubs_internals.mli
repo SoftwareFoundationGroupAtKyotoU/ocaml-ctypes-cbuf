@@ -60,6 +60,7 @@ and ('a, 'b) view = ('a, 'b) Ctypes_static.view = {
   ty : 'b typ;
 }
 
+type cposition = Ctypes_static.cposition
 type 'a fn = 'a Ctypes_static.fn
 
 type 'a prim = 'a Ctypes_primitive_types.prim =
