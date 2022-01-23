@@ -11,4 +11,7 @@ module C(F: Ctypes.FOREIGN) = struct
 
   let multi_buffer = foreign "multi_buffer" 
     (uint64_t @-> retbuf (buffer 8 ocaml_bytes @* buffer 8 ocaml_bytes @* buffer 8 ocaml_bytes))
+
+  let first_buffer = foreign "first_buffer" 
+  (int @-> retbuf ~cposition:`First (buffer 4 ocaml_bytes @* buffer 8 ocaml_bytes))
 end

@@ -179,25 +179,24 @@ module Generate_C = struct
   type _ fn =
     | Returns : 'a typ -> 'a fn
     | Function : string * 'a typ * 'b fn -> ('a -> 'b) fn
-    | Buffers : ('a, 'b) pointer cbuffers -> 'a fn
+    | Buffers : cposition * ('a, 'b) pointer cbuffers -> 'a fn
 
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Ctypes_static.Buffers (_, b) ->
-        (* TODO: consider cposition *)
+    | Ctypes_static.Buffers (cpos, b) ->
         let rec name_params_of_cbuffers :
             type a. a Ctypes_static.cbuffers -> a cbuffers = function
           | LastBuf (i, t) -> LastBuf (fresh_var (), i, t)
           | ConBuf (b1, b2) ->
               ConBuf (name_params_of_cbuffers b1, name_params_of_cbuffers b2)
         in
-        Buffers (name_params_of_cbuffers b)
+        Buffers (cpos, name_params_of_cbuffers b)
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
-    | Buffers b ->
+    | Buffers (_, b) ->
         let rec value_params_of_cbuffers :
             type a. a cbuffers -> (string * ty) list = function
           | LastBuf (x, _, _) -> [ (x, Ty value) ]
@@ -240,19 +239,28 @@ module Generate_C = struct
           match prj f (local x value) with
           | None -> body vars t
           | Some projected -> (projected, f) >>= fun x' -> body (x' :: vars) t)
-      | Buffers b ->
+      | Buffers (cpos, b) ->
           let rec body_for_cbuffers : type a. cexp list -> a cbuffers -> ccomp =
-           fun vars -> function
-            | LastBuf (x, _, t) -> body vars (Function (x, t, Returns int))
+           fun bufvars -> function
+            | LastBuf (x, _, f) -> (
+                match (prj f (local x value), cpos) with
+                | None, `First -> body (vars @ bufvars) (Returns int)
+                | None, `Last -> body (bufvars @ vars) (Returns int)
+                | Some projected, `First ->
+                    (projected, f) >>= fun x' ->
+                    body (vars @ (x' :: bufvars)) (Returns int)
+                | Some projected, `Last ->
+                    (projected, f) >>= fun x' ->
+                    body ((x' :: bufvars) @ vars) (Returns int))
             | ConBuf (LastBuf (x, _, f), t) -> (
                 match prj f (local x value) with
                 | None -> body_for_cbuffers vars t
                 | Some projected ->
                     (projected, f) >>= fun x' ->
-                    body_for_cbuffers (x' :: vars) t)
+                    body_for_cbuffers (x' :: bufvars) t)
             | _ -> raise (Unsupported "not implemented!(Cbuf_generate_c.fn)")
           in
-          body_for_cbuffers vars b
+          body_for_cbuffers [] b
     in
     let f' = name_params f in
     let vp = value_params f' in
