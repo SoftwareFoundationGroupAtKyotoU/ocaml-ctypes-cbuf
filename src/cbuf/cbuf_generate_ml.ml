@@ -556,7 +556,7 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
 
 type buf_exp = ml_exp
 
-let pattern_and_exp_of_cbuffers buf e binds =
+let pattern_and_exp_of_cbuffers cpos buf e binds =
   let rec pattern_and_exp_of_cbuffers2 :
       type a.
       a cbuffers ->
@@ -702,15 +702,14 @@ let rec wrapper_body :
             binds;
             pat = local_con "Function" [ fpat; tpat ];
           })
-  | Buffers (_, buf) ->
-      (* TODO: consider cposition *)
-      let pat, exp, binds = pattern_and_exp_of_cbuffers buf exp binds in
+  | Buffers (cpos, buf) ->
+      let pat, exp, binds = pattern_and_exp_of_cbuffers cpos buf exp binds in
       {
         exp;
         args = [];
         trivial = false;
         binds;
-        pat = local_con "Buffers" [ pat ];
+        pat = local_con "Buffers" [ `Underscore; pat ];
       }
 
 let lwt_bind = Cbuf_path.path_of_string "Lwt.bind"
