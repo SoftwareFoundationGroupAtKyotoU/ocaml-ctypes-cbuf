@@ -56,7 +56,7 @@ and (_, _) pointer =
 and 'a ptr = ('a, [ `C ]) pointer
 and 'a ocaml = ('a, [ `OCaml ]) pointer
 
-and 'a cbuffers =
+and _ cbuffers =
   | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
   | ConBuf :
       ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
