@@ -307,16 +307,18 @@ let lwt_job_type = Cbuf_path.path_of_string "Lwt_unix.job"
 let int_type = `Ident (Cbuf_path.path_of_string "Signed.sint")
 
 let rec ml_external_type_of_cbuffers :
-    type a. a cbuffers -> polarity -> ml_external_type =
- fun buf polarity ->
+    type a b. a cbuffers -> b fn -> polarity -> ml_external_type =
+ fun buf return polarity ->
   match buf with
-  | LastBuf (_, t) -> `Prim ([ ml_typ_of_typ (flip polarity) t ], int_type)
-  | ConBuf (b1, b2) -> (
-      match b1 with
-      | LastBuf (_, t1) ->
-          let (`Prim (l2, t2)) = ml_external_type_of_cbuffers b2 polarity in
-          `Prim (ml_typ_of_typ (flip polarity) t1 :: l2, t2)
-      | ConBuf _ -> raise (Unsupported "left arg shouldn't be ConBuf"))
+  | LastBuf (_, t) -> (
+      match return with
+      | Returns rt ->
+          `Prim ([ ml_typ_of_typ (flip polarity) t ], ml_typ_of_arg_typ rt)
+      | _ -> raise (Unsupported "retbuf should specify return type"))
+  | ConBuf (LastBuf (_, t1), b2) ->
+      let (`Prim (l2, t2)) = ml_external_type_of_cbuffers b2 return polarity in
+      `Prim (ml_typ_of_typ (flip polarity) t1 :: l2, t2)
+  | _ -> raise (Unsupported "left arg shouldn't be ConBuf")
 
 (* externでバインドするCの関数の型 *)
 let rec ml_external_type_of_fn :
@@ -329,8 +331,7 @@ let rec ml_external_type_of_fn :
   | Function (f, t), _ ->
       let (`Prim (l, t)) = ml_external_type_of_fn ~errno t polarity in
       `Prim (ml_typ_of_typ (flip polarity) f :: l, t)
-  | Buffers (_, b), _ -> ml_external_type_of_cbuffers b polarity
-(* TODO: consider cposition *)
+  | Buffers (_, b, r), _ -> ml_external_type_of_cbuffers b r polarity
 
 let var_counter = ref 0
 
@@ -702,7 +703,8 @@ let rec wrapper_body :
             binds;
             pat = local_con "Function" [ fpat; tpat ];
           })
-  | Buffers (cpos, buf) ->
+  | Buffers (cpos, buf, _) ->
+      (* TODO: *)
       let pat, exp, binds = pattern_and_exp_of_cbuffers cpos buf exp binds in
       {
         exp;

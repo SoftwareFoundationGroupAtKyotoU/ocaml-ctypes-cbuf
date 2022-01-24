@@ -394,7 +394,8 @@ module type TYPE = sig
   val retbuf :
     ?cposition:Ctypes_static.cposition ->
     ('a, _) Ctypes_static.pointer cbuffers ->
-    'a fn
+    'c fn ->
+    ('a * 'c) fn
 
   val buffer :
     int ->

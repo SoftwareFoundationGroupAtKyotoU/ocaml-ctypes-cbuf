@@ -95,7 +95,7 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns : 'a typ -> 'a fn
   | Function : 'a typ * 'b fn -> ('a -> 'b) fn
-  | Buffers : cposition * ('a, 'b) pointer cbuffers -> 'a fn
+  | Buffers : cposition * ('a, 'b) pointer cbuffers * 'c fn -> ('a * 'c) fn
 
 type _ bigarray_class =
   | Genarray
@@ -290,7 +290,7 @@ let returning v =
 
 let static_funptr fn = Funptr fn
 let ( @* ) l r = ConBuf (l, r)
-let retbuf ?(cposition = `Last) buf = Buffers (cposition, buf)
+let retbuf ?(cposition = `Last) buf return = Buffers (cposition, buf, return)
 let structure tag = Struct { spec = Incomplete { isize = 0 }; tag; fields = [] }
 let union utag = Union { utag; uspec = None; ufields = [] }
 let offsetof { foffset; _ } = foffset

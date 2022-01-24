@@ -179,24 +179,25 @@ module Generate_C = struct
   type _ fn =
     | Returns : 'a typ -> 'a fn
     | Function : string * 'a typ * 'b fn -> ('a -> 'b) fn
-    | Buffers : cposition * ('a, 'b) pointer cbuffers -> 'a fn
+    | Buffers : cposition * ('a, 'b) pointer cbuffers * 'c fn -> ('a * 'c) fn
 
   let rec name_params : type a. a Ctypes_static.fn -> a fn = function
     | Ctypes_static.Returns t -> Returns t
     | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Ctypes_static.Buffers (cpos, b) ->
+    | Ctypes_static.Buffers (cpos, b, r) ->
         let rec name_params_of_cbuffers :
             type a. a Ctypes_static.cbuffers -> a cbuffers = function
           | LastBuf (i, t) -> LastBuf (fresh_var (), i, t)
           | ConBuf (b1, b2) ->
               ConBuf (name_params_of_cbuffers b1, name_params_of_cbuffers b2)
         in
-        Buffers (cpos, name_params_of_cbuffers b)
+        Buffers (cpos, name_params_of_cbuffers b, name_params r)
 
   let rec value_params : type a. a fn -> (string * ty) list = function
     | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
-    | Buffers (_, b) ->
+    | Buffers (_, b, _) ->
+        (* TODO: retbuf *)
         let rec value_params_of_cbuffers :
             type a. a cbuffers -> (string * ty) list = function
           | LastBuf (x, _, _) -> [ (x, Ty value) ]
@@ -239,7 +240,8 @@ module Generate_C = struct
           match prj f (local x value) with
           | None -> body vars t
           | Some projected -> (projected, f) >>= fun x' -> body (x' :: vars) t)
-      | Buffers (cpos, b) ->
+      | Buffers (cpos, b, r) ->
+          (* TODO: retbuf *)
           let rec body_for_cbuffers : type a. cexp list -> a cbuffers -> ccomp =
            fun bufvars -> function
             | LastBuf (x, _, f) -> (

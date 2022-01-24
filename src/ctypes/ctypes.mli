@@ -517,7 +517,10 @@ module type FOREIGN = sig
   val returning : 'a typ -> 'a return fn
 
   val retbuf :
-    ?cposition:Ctypes_static.cposition -> ('a, _) pointer cbuffers -> 'a fn
+    ?cposition:Ctypes_static.cposition ->
+    ('a, _) pointer cbuffers ->
+    'c fn ->
+    ('a * 'c) fn
 
   type 'a result
 
