@@ -197,7 +197,6 @@ module Generate_C = struct
     | Returns _t -> []
     | Function (x, _, t) -> (x, Ty value) :: value_params t
     | Buffers (_, b, _) ->
-        (* TODO: retbuf *)
         let rec value_params_of_cbuffers :
             type a. a cbuffers -> (string * ty) list = function
           | LastBuf (x, _, _) -> [ (x, Ty value) ]
@@ -241,19 +240,17 @@ module Generate_C = struct
           | None -> body vars t
           | Some projected -> (projected, f) >>= fun x' -> body (x' :: vars) t)
       | Buffers (cpos, b, r) ->
-          (* TODO: retbuf *)
           let rec body_for_cbuffers : type a. cexp list -> a cbuffers -> ccomp =
            fun bufvars -> function
             | LastBuf (x, _, f) -> (
                 match (prj f (local x value), cpos) with
-                | None, `First -> body (vars @ bufvars) (Returns int)
-                | None, `Last -> body (bufvars @ vars) (Returns int)
+                | None, `First -> body (vars @ bufvars) r
+                | None, `Last -> body (bufvars @ vars) r
                 | Some projected, `First ->
-                    (projected, f) >>= fun x' ->
-                    body (vars @ (x' :: bufvars)) (Returns int)
+                    (projected, f) >>= fun x' -> body (vars @ (x' :: bufvars)) r
                 | Some projected, `Last ->
-                    (projected, f) >>= fun x' ->
-                    body ((x' :: bufvars) @ vars) (Returns int))
+                    (projected, f) >>= fun x' -> body ((x' :: bufvars) @ vars) r
+                )
             | ConBuf (LastBuf (x, _, f), t) -> (
                 match prj f (local x value) with
                 | None -> body_for_cbuffers vars t
