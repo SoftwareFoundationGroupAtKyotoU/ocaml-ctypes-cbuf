@@ -147,18 +147,19 @@ val write_ml :
     The generated code uses definitions exposed in the module
     [Cbuf_internals]. *)
 
+type cposition = [ `First | `Last ]
+type _ cbuffers
+
 val retbuf :
-  ?cposition:Cbuf_static.cposition ->
-  ('a, 'b) Ctypes.pointer Cbuf_static.cbuffers ->
+  ?cposition:cposition ->
+  ('a, 'b) Ctypes.pointer cbuffers ->
   'c fn ->
   ('a * 'c) fn
 
 val buffer :
-  int ->
-  ('a, 'b) Ctypes.pointer Ctypes.typ ->
-  ('a, 'b) Ctypes.pointer Cbuf_static.cbuffers
+  int -> ('a, 'b) Ctypes.pointer Ctypes.typ -> ('a, 'b) Ctypes.pointer cbuffers
 
 val ( @* ) :
-  ('a, 'b) Ctypes_static.pointer Cbuf_static.cbuffers ->
-  ('c, 'd) Ctypes_static.pointer Cbuf_static.cbuffers ->
-  ('a * 'c, [ `OCaml ]) Ctypes_static.pointer Cbuf_static.cbuffers
+  ('a, 'b) Ctypes.pointer cbuffers ->
+  ('c, 'd) Ctypes.pointer cbuffers ->
+  ('a * 'c, [ `OCaml ]) Ctypes.pointer cbuffers

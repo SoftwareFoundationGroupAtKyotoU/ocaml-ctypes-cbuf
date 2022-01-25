@@ -53,7 +53,7 @@ _build/examples/ncurses/stub-generation/stub-generator/ncurses_stub_generator.cm
 _build/examples/sigset/sigset.cmi : _build/src/ctypes/posixTypes.cmi _build/src/ctypes/ctypes.cmi
 _build/examples/sigset/sigset.cmo : _build/src/ctypes/posixTypes.cmi _build/src/ctypes-foreign/foreign.cmi _build/src/ctypes/ctypes.cmi _build/examples/sigset/sigset.cmi
 _build/examples/sigset/sigset.cmx : _build/src/ctypes/posixTypes.cmx _build/src/ctypes-foreign/foreign.cmx _build/src/ctypes/ctypes.cmx _build/examples/sigset/sigset.cmi
-_build/src/cbuf/cbuf.cmi : _build/src/ctypes/ctypes_static.cmi _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_static.cmo
+_build/src/cbuf/cbuf.cmi : _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_static.cmo
 _build/src/cbuf/cbuf.cmo : _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf_structs.cmi _build/src/cbuf/cbuf_static.cmo _build/src/cbuf/cbuf_generate_ml.cmi _build/src/cbuf/cbuf_generate_c.cmi _build/src/cbuf/cbuf.cmi
 _build/src/cbuf/cbuf.cmx : _build/src/ctypes/ctypes.cmx _build/src/cbuf/cbuf_structs.cmx _build/src/cbuf/cbuf_static.cmx _build/src/cbuf/cbuf_generate_ml.cmx _build/src/cbuf/cbuf_generate_c.cmx _build/src/cbuf/cbuf.cmi
 _build/src/cbuf/cbuf_analysis.cmi : _build/src/cbuf/cbuf_static.cmo
