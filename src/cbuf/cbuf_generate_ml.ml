@@ -558,7 +558,7 @@ let rec pattern_of_typ : type a. a typ -> ml_pat = function
 
 type buf_exp = ml_exp
 
-let pattern_and_exp_of_cbuffers cpos buf e binds =
+let pattern_and_exp_of_cbuffers buf e binds =
   let rec pattern_and_exp_of_cbuffers2 :
       type a.
       a cbuffers ->
@@ -615,7 +615,10 @@ let pattern_and_exp_of_cbuffers cpos buf e binds =
     | _ -> raise (Unsupported "left arg should be LastBuf")
   in
   let pat, exp, be, binds = pattern_and_exp_of_cbuffers2 buf e binds in
-  (pat, `Let (`Var "_", exp, be), binds)
+  let ret_var = fresh_var () in
+  ( pat,
+    `Let (`Var ret_var, exp, `Tuple [ be; `Ident (path_of_string ret_var) ]),
+    binds )
 
 type wrapper_state = {
   pat : ml_pat;
@@ -704,15 +707,25 @@ let rec wrapper_body :
             binds;
             pat = local_con "Function" [ fpat; tpat ];
           })
-  | Buffers (cpos, buf, _) ->
-      (* TODO: *)
-      let pat, exp, binds = pattern_and_exp_of_cbuffers cpos buf exp binds in
+  | Buffers (_, buf, ret) ->
+      let ret_ty =
+        match ret with
+        | Returns t -> t
+        | _ -> raise (Unsupported "retbuf shold include return type")
+      in
+      let ret_pat, _, _ =
+        pattern_and_exp_of_typ ~concurrency:`Sequential ~errno:`Ignore_errno
+          ret_ty exp In []
+      in
+      let pat, exp, binds = pattern_and_exp_of_cbuffers buf exp binds in
       {
         exp;
         args = [];
         trivial = false;
         binds;
-        pat = local_con "Buffers" [ `Underscore; pat ];
+        pat =
+          local_con "Buffers"
+            [ `Underscore; pat; local_con "Returns" [ ret_pat ] ];
       }
 
 let lwt_bind = Cbuf_path.path_of_string "Lwt.bind"

@@ -14,9 +14,16 @@ module Types : sig
   val write_c : Format.formatter -> (module BINDINGS) -> unit
 end
 
-module type FOREIGN =
-  Ctypes.FOREIGN with type 'a result = unit and type 'a fn = 'a Cbuf_static.fn
+type 'a fn = 'a Cbuf_static.fn =
+  | Returns : 'a Ctypes.typ -> 'a fn
+  | Function : 'a Ctypes.typ * 'b fn -> ('a -> 'b) fn
+  | Buffers :
+      Cbuf_static.cposition
+      * ('a, 'b) Ctypes.pointer Cbuf_static.cbuffers
+      * 'c fn
+      -> ('a * 'c) fn
 
+module type FOREIGN = Ctypes.FOREIGN with type 'a fn = 'a fn
 module type BINDINGS = functor (F : FOREIGN) -> sig end
 
 type errno_policy
@@ -143,8 +150,8 @@ val write_ml :
 val retbuf :
   ?cposition:Cbuf_static.cposition ->
   ('a, 'b) Ctypes.pointer Cbuf_static.cbuffers ->
-  'c Cbuf_static.fn ->
-  ('a * 'c) Cbuf_static.fn
+  'c fn ->
+  ('a * 'c) fn
 
 val buffer :
   int ->

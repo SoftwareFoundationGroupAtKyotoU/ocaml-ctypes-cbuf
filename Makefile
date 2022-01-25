@@ -92,7 +92,7 @@ cstubs: PROJECT=cstubs
 cstubs: $(cstubs.dir)/$(cstubs.extra_mls) $$(LIB_TARGETS)
 
 # cbuf subproject
-cbuf.public = cbuf
+cbuf.public = cbuf cbuf_internals
 cbuf.dir = src/cbuf
 cbuf.subproject_deps = ctypes
 cbuf.deps = str integers

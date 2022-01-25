@@ -59,7 +59,13 @@ and ('a, 'b) view = ('a, 'b) Ctypes_static.view = {
   ty : 'b typ;
 }
 
-type 'a fn = 'a Ctypes_static.fn
+type cposition = Cbuf_static.cposition
+
+and 'a cbuffers = 'a Cbuf_static.cbuffers =
+  | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
+  | ConBuf :
+      ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
+      -> ('a * 'c, [ `OCaml ]) pointer cbuffers
 
 type 'a prim = 'a Ctypes_primitive_types.prim =
   | Char : char prim

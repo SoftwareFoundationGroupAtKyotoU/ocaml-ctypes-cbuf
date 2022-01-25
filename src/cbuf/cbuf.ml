@@ -8,9 +8,7 @@
 (* Cbuf public interface. *)
 include Cbuf_static
 
-module type FOREIGN =
-  Ctypes.FOREIGN with type 'a result = unit and type 'a fn = 'a Cbuf_static.fn
-
+module type FOREIGN = Ctypes.FOREIGN with type 'a fn = 'a Cbuf_static.fn
 module type BINDINGS = functor (F : FOREIGN) -> sig end
 
 type concurrency_policy =
@@ -63,11 +61,12 @@ let write_return :
 
 let write_fn ~concurrency ~errno fmt =
   let _ = concurrency and _ = errno in
-  Format.fprintf fmt "type 'a fn =@\n";
+  Format.fprintf fmt "type 'a fn = 'a Cbuf.fn =@\n";
   Format.fprintf fmt " | Returns  : 'a CI.typ   -> 'a return fn@\n";
-  Format.fprintf fmt " | Function : 'a CI.typ * 'b fn  -> ('a -> 'b) fn@\n";
+  Format.fprintf fmt " | Function : 'a CI.typ * 'b fn -> ('a -> 'b) fn@\n";
   Format.fprintf fmt
-    " | Buffers : CI.cposition * ('a, 'b) CI.pointer CI.cbuffers -> 'a fn@\n"
+    " | Buffers : CI.cposition * ('a, 'b) CI.pointer CI.cbuffers * 'c fn -> \
+     ('a * 'c) fn@\n"
 
 let write_map_result ~concurrency ~errno fmt =
   match (concurrency, errno) with
@@ -87,8 +86,6 @@ let write_foreign ~concurrency ~errno fmt bindings val_bindings =
   write_fn ~concurrency ~errno fmt;
   write_map_result ~concurrency ~errno fmt;
   Format.fprintf fmt "let returning t = Returns t@\n";
-  Format.fprintf fmt
-    "let retbuf ?(cposition = `Last) b = Buffers (cposition, b)@\n";
   Format.fprintf fmt "let (@@->) f p = Function (f, p)@\n";
   Format.fprintf fmt
     "let foreign : type a b. string -> (a -> b) fn -> (a -> b) =@\n";
@@ -160,7 +157,7 @@ let write_c ?(errno = `Ignore_errno) fmt ~prefix (module B : BINDINGS) =
 let write_ml ?(concurrency = `Sequential) ?(errno = `Ignore_errno) fmt ~prefix
     (module B : BINDINGS) =
   let foreign, finally = gen_ml ~concurrency ~errno prefix fmt in
-  let () = Format.fprintf fmt "module CI = Cstubs_internals@\n@\n" in
+  let () = Format.fprintf fmt "module CI = Cbuf_internals@\n@\n" in
   let module M = B ((val foreign)) in
   finally ()
 

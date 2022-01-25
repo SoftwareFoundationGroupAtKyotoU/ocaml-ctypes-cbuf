@@ -106,11 +106,3 @@ let build_enum_type name underlying ?(typedef = false) ?unexpected alist =
       Printf.ksprintf failwith "Enum type detected as floating type: %s" name
 
 let use_value v = Ctypes_memory_stubs.use_value v
-
-type cposition = [ `First | `Last ]
-
-type _ cbuffers =
-  | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
-  | ConBuf :
-      ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
-      -> ('a * 'c, [ `OCaml ]) pointer cbuffers
