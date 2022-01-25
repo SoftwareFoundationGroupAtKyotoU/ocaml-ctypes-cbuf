@@ -14,9 +14,10 @@ module Types : sig
   val write_c : Format.formatter -> (module BINDINGS) -> unit
 end
 
-module type FOREIGN = Ctypes.FOREIGN
+module type FOREIGN =
+  Ctypes.FOREIGN with type 'a result = unit and type 'a fn = 'a Cbuf_static.fn
 
-module type BINDINGS = functor (F : FOREIGN with type 'a result = unit) -> sig end
+module type BINDINGS = functor (F : FOREIGN) -> sig end
 
 type errno_policy
 (** Values of the [errno_policy] type specify the errno support provided by
@@ -138,3 +139,19 @@ val write_ml :
 
     The generated code uses definitions exposed in the module
     [Cbuf_internals]. *)
+
+val retbuf :
+  ?cposition:Cbuf_static.cposition ->
+  ('a, 'b) Ctypes.pointer Cbuf_static.cbuffers ->
+  'c Cbuf_static.fn ->
+  ('a * 'c) Cbuf_static.fn
+
+val buffer :
+  int ->
+  ('a, 'b) Ctypes.pointer Ctypes.typ ->
+  ('a, 'b) Ctypes.pointer Cbuf_static.cbuffers
+
+val ( @* ) :
+  ('a, 'b) Ctypes_static.pointer Cbuf_static.cbuffers ->
+  ('c, 'd) Ctypes_static.pointer Cbuf_static.cbuffers ->
+  ('a * 'c, [ `OCaml ]) Ctypes_static.pointer Cbuf_static.cbuffers

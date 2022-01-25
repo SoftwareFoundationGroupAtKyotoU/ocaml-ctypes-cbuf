@@ -175,7 +175,7 @@ module Generate_C = struct
     | LastBuf : string * int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
     | ConBuf :
         ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
-        -> ('a * 'c, [ `Mixed ]) pointer cbuffers
+        -> ('a * 'c, [ `OCaml ]) pointer cbuffers
 
   type _ fn =
     | Returns : 'a typ -> 'a fn

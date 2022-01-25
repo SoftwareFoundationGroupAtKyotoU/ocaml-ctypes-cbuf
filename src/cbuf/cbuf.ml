@@ -6,17 +6,19 @@
  *)
 
 (* Cbuf public interface. *)
+include Cbuf_static
 
-module type FOREIGN = Ctypes.FOREIGN
-module type FOREIGN' = FOREIGN with type 'a result = unit
-module type BINDINGS = functor (F : FOREIGN') -> sig end
+module type FOREIGN =
+  Ctypes.FOREIGN with type 'a result = unit and type 'a fn = 'a Cbuf_static.fn
+
+module type BINDINGS = functor (F : FOREIGN) -> sig end
 
 type concurrency_policy =
   [ `Sequential | `Lwt_jobs | `Lwt_preemptive | `Unlocked ]
 
 type errno_policy = [ `Ignore_errno | `Return_errno ]
 
-let gen_c ~errno prefix fmt : (module FOREIGN') =
+let gen_c ~errno prefix fmt : (module FOREIGN) =
   (module struct
     let counter = ref 0
 
@@ -107,7 +109,7 @@ let write_foreign ~concurrency ~errno fmt bindings val_bindings =
   Format.fprintf fmt
     " @[Printf.ksprintf@ failwith@ \"No match for %%s\" s@]@]@]@.@\n"
 
-let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN') * (unit -> unit) =
+let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN) * (unit -> unit) =
   let bindings = ref [] and val_bindings = ref [] and counter = ref 0 in
   let var prefix name =
     incr counter;

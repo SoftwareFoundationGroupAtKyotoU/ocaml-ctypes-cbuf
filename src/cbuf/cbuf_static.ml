@@ -13,7 +13,7 @@ and _ cbuffers =
       -> ('a, 'b) Ctypes.pointer cbuffers
   | ConBuf :
       ('a, 'b) Ctypes.pointer cbuffers * ('c, 'd) Ctypes.pointer cbuffers
-      -> ('a * 'c, [ `Mixed ]) Ctypes.pointer cbuffers
+      -> ('a * 'c, [ `OCaml ]) Ctypes.pointer cbuffers
 
 let ( @* ) l r = ConBuf (l, r)
 let retbuf ?(cposition = `Last) buf return = Buffers (cposition, buf, return)
