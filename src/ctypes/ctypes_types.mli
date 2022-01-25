@@ -213,9 +213,6 @@ module type TYPE = sig
   val ocaml_bytes : bytes Ctypes_static.ocaml typ
   (** Value representing the directly mapped storage of an OCaml byte array. *)
 
-  type 'a cbuffers
-  (* TODO: move buffer definition *)
-
   (** {3 Array types} *)
 
   (** {4 C array types} *)
@@ -381,26 +378,10 @@ module type TYPE = sig
       pointer to void -- and returns a float.
   *)
 
-  val ( @* ) :
-    ('a, 'b) Ctypes_static.pointer cbuffers ->
-    ('c, 'd) Ctypes_static.pointer cbuffers ->
-    ('a * 'c, [ `Mixed ]) Ctypes_static.pointer cbuffers
-
   val returning : 'a typ -> 'a fn
   (** Give the return type of a C function.  Note that [returning] is intended
       to be used together with {!(@->)}; see the documentation for {!(@->)} for an
       example. *)
-
-  val retbuf :
-    ?cposition:Ctypes_static.cposition ->
-    ('a, _) Ctypes_static.pointer cbuffers ->
-    'c fn ->
-    ('a * 'c) fn
-
-  val buffer :
-    int ->
-    ('a, 'b) Ctypes_static.pointer typ ->
-    ('a, 'b) Ctypes_static.pointer cbuffers
 
   (** {3 Function pointer types} *)
   type 'a static_funptr = 'a Ctypes_static.static_funptr

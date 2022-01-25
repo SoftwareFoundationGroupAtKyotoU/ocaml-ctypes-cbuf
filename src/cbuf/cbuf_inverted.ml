@@ -14,13 +14,17 @@ module type INTERNAL = sig
   val typedef : _ Ctypes.typ -> string -> unit
 
   val internal :
-    ?runtime_lock:bool -> string -> ('a -> 'b) Ctypes.fn -> ('a -> 'b) -> unit
+    ?runtime_lock:bool ->
+    string ->
+    ('a -> 'b) Cbuf_static.fn ->
+    ('a -> 'b) ->
+    unit
 end
 
 module type BINDINGS = functor (F : INTERNAL) -> sig end
 
 type fn_meta = { fn_runtime_lock : bool; fn_name : string }
-type fn_info = Fn : fn_meta * (_ -> _) Ctypes.fn -> fn_info
+type fn_info = Fn : fn_meta * (_ -> _) Cbuf_static.fn -> fn_info
 type ty = Ty : _ Ctypes.typ -> ty
 type typedef = Typedef : _ Ctypes.typ * string -> typedef
 type enum = Enum : (string * int64) list * _ Ctypes.typ -> enum

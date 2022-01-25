@@ -8,6 +8,7 @@
 (* C code representation. *)
 
 open Ctypes_static
+open Cbuf_static
 
 let fresh_var =
   let var_counter = ref 0 in
@@ -72,9 +73,9 @@ let rec return_type : type a. a fn -> ty = function
 
 let args : type a. a fn -> (string * ty) list =
  fun fn ->
-  let rec loop : type a. a Ctypes.fn -> (string * ty) list = function
-    | Ctypes_static.Function (ty, fn) -> (fresh_var (), Ty ty) :: loop fn
-    | Ctypes_static.Returns _ -> []
+  let rec loop : type a. a fn -> (string * ty) list = function
+    | Function (ty, fn) -> (fresh_var (), Ty ty) :: loop fn
+    | Returns _ -> []
     | Buffers _ -> raise (Unsupported "not implemented!(Cbuf_c_language.args)")
   in
   loop fn

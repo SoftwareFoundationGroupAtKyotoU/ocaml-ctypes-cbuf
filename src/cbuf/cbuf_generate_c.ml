@@ -8,6 +8,7 @@
 (* C stub generation *)
 
 open Ctypes_static
+open Cbuf_static
 open Cbuf_c_language
 open Unchecked_function_types
 
@@ -181,12 +182,12 @@ module Generate_C = struct
     | Function : string * 'a typ * 'b fn -> ('a -> 'b) fn
     | Buffers : cposition * ('a, 'b) pointer cbuffers * 'c fn -> ('a * 'c) fn
 
-  let rec name_params : type a. a Ctypes_static.fn -> a fn = function
-    | Ctypes_static.Returns t -> Returns t
-    | Ctypes_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
-    | Ctypes_static.Buffers (cpos, b, r) ->
+  let rec name_params : type a. a Cbuf_static.fn -> a fn = function
+    | Cbuf_static.Returns t -> Returns t
+    | Cbuf_static.Function (f, t) -> Function (fresh_var (), f, name_params t)
+    | Cbuf_static.Buffers (cpos, b, r) ->
         let rec name_params_of_cbuffers :
-            type a. a Ctypes_static.cbuffers -> a cbuffers = function
+            type a. a Cbuf_static.cbuffers -> a cbuffers = function
           | LastBuf (i, t) -> LastBuf (fresh_var (), i, t)
           | ConBuf (b1, b2) ->
               ConBuf (name_params_of_cbuffers b1, name_params_of_cbuffers b2)
@@ -205,7 +206,7 @@ module Generate_C = struct
         in
         value_params_of_cbuffers b
 
-  let fundec : type a. string -> a Ctypes.fn -> cfundec =
+  let fundec : type a. string -> a Cbuf_static.fn -> cfundec =
    fun name fn -> `Fundec (name, args fn, return_type fn)
 
   let fn :
@@ -213,7 +214,7 @@ module Generate_C = struct
       errno:errno_policy ->
       cname:string ->
       stub_name:string ->
-      a Ctypes_static.fn ->
+      a Cbuf_static.fn ->
       cfundef =
    fun ~errno:errno_ ~cname ~stub_name f ->
     let fvar =
@@ -265,7 +266,7 @@ module Generate_C = struct
     let vp = value_params f' in
     `Function (`Fundec (stub_name, vp, Ty value), body [] f', `Extern)
 
-  let byte_fn : type a. string -> a Ctypes_static.fn -> int -> cfundef =
+  let byte_fn : type a. string -> a Cbuf_static.fn -> int -> cfundef =
    fun fname fn nargs ->
     let argv = ("argv", Ty (ptr value)) in
     let argc = ("argc", Ty int) in

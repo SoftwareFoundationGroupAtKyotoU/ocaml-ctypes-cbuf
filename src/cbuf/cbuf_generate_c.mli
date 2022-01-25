@@ -12,7 +12,7 @@ val fn :
   cname:string ->
   stub_name:string ->
   Format.formatter ->
-  'a Ctypes.fn ->
+  'a Cbuf_static.fn ->
   unit
 
 val value :
@@ -22,8 +22,8 @@ val inverse_fn :
   stub_name:string ->
   runtime_lock:bool ->
   Format.formatter ->
-  'a Ctypes.fn ->
+  'a Cbuf_static.fn ->
   unit
 
 val inverse_fn_decl :
-  stub_name:string -> Format.formatter -> 'a Ctypes.fn -> unit
+  stub_name:string -> Format.formatter -> 'a Cbuf_static.fn -> unit

@@ -24,7 +24,7 @@ let gen_c ~errno prefix fmt : (module FOREIGN') =
       incr counter;
       Printf.sprintf "%s_%d_%s" prefix !counter name
 
-    type 'a fn = 'a Ctypes.fn
+    type 'a fn = 'a Cbuf_static.fn
     type 'a return = 'a
     type 'a result = unit
 
@@ -34,12 +34,11 @@ let gen_c ~errno prefix fmt : (module FOREIGN') =
     let foreign_value cname typ =
       Cbuf_generate_c.value ~cname ~stub_name:(var prefix cname) fmt typ
 
-    let returning = Ctypes.returning
-    let retbuf = Ctypes.retbuf
-    let ( @-> ) = Ctypes.( @-> )
+    let returning = Cbuf_static.returning
+    let ( @-> ) = Cbuf_static.( @-> )
   end)
 
-type bind = Bind : string * string * ('a -> 'b) Ctypes.fn -> bind
+type bind = Bind : string * string * ('a -> 'b) Cbuf_static.fn -> bind
 type val_bind = Val_bind : string * string * 'a Ctypes.typ -> val_bind
 
 let write_return :
@@ -115,12 +114,8 @@ let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN') * (unit -> unit) =
     Printf.sprintf "%s_%d_%s" prefix !counter name
   in
   ( (module struct
-      type 'a fn = 'a Ctypes.fn
+      type 'a fn = 'a Cbuf_static.fn
       type 'a return = 'a
-
-      let ( @-> ) = Ctypes.( @-> )
-      let returning = Ctypes.returning
-
       type 'a result = unit
 
       let foreign cname fn =
@@ -133,12 +128,11 @@ let gen_ml ~concurrency ~errno prefix fmt : (module FOREIGN') * (unit -> unit) =
         let name = var prefix cname in
         Cbuf_generate_ml.extern ~errno:`Ignore_errno ~stub_name:name
           ~external_name:name fmt
-          Ctypes.(void @-> returning (ptr void));
+          Cbuf_static.(Ctypes.void @-> returning Ctypes.(ptr void));
         val_bindings := Val_bind (cname, name, typ) :: !val_bindings
 
-      let returning = Ctypes.returning
-      let retbuf = Ctypes.retbuf
-      let ( @-> ) = Ctypes.( @-> )
+      let returning = Cbuf_static.returning
+      let ( @-> ) = Cbuf_static.( @-> )
     end),
     fun () -> write_foreign ~concurrency ~errno fmt !bindings !val_bindings )
 

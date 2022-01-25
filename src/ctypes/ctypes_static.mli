@@ -16,7 +16,6 @@ type _ ocaml_type =
 
 type incomplete_size = { mutable isize : int }
 type structured_spec = { size : int; align : int }
-type cposition = [ `First | `Last ]
 
 type 'a structspec =
   | Incomplete of incomplete_size
@@ -51,12 +50,6 @@ and (_, _) pointer =
 and 'a ptr = ('a, [ `C ]) pointer
 and 'a ocaml = ('a, [ `OCaml ]) pointer
 
-and 'a cbuffers =
-  | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
-  | ConBuf :
-      ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
-      -> ('a * 'c, [ `Mixed ]) pointer cbuffers
-
 and 'a static_funptr =
   | Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 
@@ -87,7 +80,6 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns : 'a typ -> 'a fn
   | Function : 'a typ * 'b fn -> ('a -> 'b) fn
-  | Buffers : cposition * ('a, 'b) pointer cbuffers * 'c fn -> ('a * 'c) fn
 
 type _ bigarray_class =
   | Genarray
@@ -164,16 +156,9 @@ val ullong : Unsigned.ullong typ
 val array : int -> 'a typ -> 'a carray typ
 val ocaml_string : string ocaml typ
 val ocaml_bytes : bytes ocaml typ
-val buffer : int -> ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
 val ocaml_float_array : float array ocaml typ
 val ptr : 'a typ -> 'a ptr typ
 val ( @-> ) : 'a typ -> 'b fn -> ('a -> 'b) fn
-
-val ( @* ) :
-  ('a, 'b) pointer cbuffers ->
-  ('c, 'd) pointer cbuffers ->
-  ('a * 'c, [ `Mixed ]) pointer cbuffers
-
 val abstract : name:string -> size:int -> alignment:int -> 'a abstract typ
 
 val view :
@@ -212,10 +197,6 @@ val fortran_bigarray :
 
 val returning : 'a typ -> 'a fn
 val static_funptr : 'a fn -> 'a static_funptr typ
-
-val retbuf :
-  ?cposition:cposition -> ('a, _) pointer cbuffers -> 'c fn -> ('a * 'c) fn
-
 val structure : string -> 'a structure typ
 val union : string -> 'a union typ
 val offsetof : ('a, 'b) field -> int

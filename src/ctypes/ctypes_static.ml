@@ -21,7 +21,6 @@ type 'a structspec =
   | Complete of structured_spec
 
 type abstract_type = { aname : string; asize : int; aalignment : int }
-type cposition = [ `First | `Last ]
 
 type _ ocaml_type =
   | String : string ocaml_type
@@ -57,12 +56,6 @@ and (_, _) pointer =
 and 'a ptr = ('a, [ `C ]) pointer
 and 'a ocaml = ('a, [ `OCaml ]) pointer
 
-and _ cbuffers =
-  | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
-  | ConBuf :
-      ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
-      -> ('a * 'c, [ `Mixed ]) pointer cbuffers
-
 and 'a static_funptr =
   | Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
 
@@ -95,7 +88,6 @@ and 's boxed_field = BoxedField : ('a, 's) field -> 's boxed_field
 and _ fn =
   | Returns : 'a typ -> 'a fn
   | Function : 'a typ * 'b fn -> ('a -> 'b) fn
-  | Buffers : cposition * ('a, 'b) pointer cbuffers * 'c fn -> ('a * 'c) fn
 
 type _ bigarray_class =
   | Genarray
@@ -198,7 +190,6 @@ let rec has_ocaml_argument : type a. a fn -> bool = function
   | Returns _ -> false
   | Function (t, _) when ocaml_value t -> true
   | Function (_, t) -> has_ocaml_argument t
-  | Buffers _ -> raise (Unsupported "not implemented!")
 
 let void = Void
 let char = Primitive Ctypes_primitive_types.Char
@@ -234,7 +225,6 @@ let ullong = Primitive Ctypes_primitive_types.Ullong
 let array i t = Array (t, i)
 let ocaml_string = OCaml String
 let ocaml_bytes = OCaml Bytes
-let buffer i ty = LastBuf (i, ty)
 let ocaml_float_array = OCaml FloatArray
 let ptr t = Pointer t
 
@@ -289,8 +279,6 @@ let returning v =
   else Returns v
 
 let static_funptr fn = Funptr fn
-let ( @* ) l r = ConBuf (l, r)
-let retbuf ?(cposition = `Last) buf return = Buffers (cposition, buf, return)
 let structure tag = Struct { spec = Incomplete { isize = 0 }; tag; fields = [] }
 let union utag = Union { utag; uspec = None; ufields = [] }
 let offsetof { foffset; _ } = foffset

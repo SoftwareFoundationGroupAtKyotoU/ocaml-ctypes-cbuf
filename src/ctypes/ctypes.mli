@@ -121,7 +121,6 @@ type 'a abstract = 'a Ctypes_static.abstract
 include
   Ctypes_types.TYPE
     with type 'a typ = 'a Ctypes_static.typ
-     and type 'a cbuffers = 'a Ctypes_static.cbuffers
      and type ('a, 's) field := ('a, 's) field
 
 (** {3 Operations on types} *)
@@ -133,6 +132,8 @@ val sizeof : 'a typ -> int
 val alignment : 'a typ -> int
 (** [alignment t] computes the alignment requirements of the type [t].  The
     exception {!IncompleteType} is raised if [t] is incomplete. *)
+
+val passable : 'a typ -> bool
 
 val format_typ : ?name:string -> Format.formatter -> 'a typ -> unit
 (** Pretty-print a C representation of the type to the specified formatter. *)
@@ -515,12 +516,6 @@ module type FOREIGN = sig
 
   val ( @-> ) : 'a typ -> 'b fn -> ('a -> 'b) fn
   val returning : 'a typ -> 'a return fn
-
-  val retbuf :
-    ?cposition:Ctypes_static.cposition ->
-    ('a, _) pointer cbuffers ->
-    'c fn ->
-    ('a * 'c) fn
 
   type 'a result
 

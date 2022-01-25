@@ -8,6 +8,7 @@
 (* ML stub generation *)
 
 open Ctypes_static
+open Cbuf_static
 open Cbuf_path
 open Cbuf_errors
 

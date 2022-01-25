@@ -47,7 +47,6 @@ and ('a, 'b) pointer = ('a, 'b) Ctypes_static.pointer =
 
 and 'a ptr = ('a, [ `C ]) pointer
 and 'a ocaml = ('a, [ `OCaml ]) pointer
-and 'a cbuffers = 'a Ctypes_static.cbuffers
 
 and 'a static_funptr = 'a Ctypes_static.static_funptr =
   | Static_funptr : (Obj.t option, 'a fn) Ctypes_ptr.Fat.t -> 'a static_funptr
@@ -60,7 +59,6 @@ and ('a, 'b) view = ('a, 'b) Ctypes_static.view = {
   ty : 'b typ;
 }
 
-type cposition = Ctypes_static.cposition
 type 'a fn = 'a Ctypes_static.fn
 
 type 'a prim = 'a Ctypes_primitive_types.prim =

@@ -12,7 +12,7 @@ val extern :
   stub_name:string ->
   external_name:string ->
   Format.formatter ->
-  ('a -> 'b) Ctypes.fn ->
+  ('a -> 'b) Cbuf_static.fn ->
   unit
 
 val case :
@@ -21,7 +21,7 @@ val case :
   stub_name:string ->
   external_name:string ->
   Format.formatter ->
-  ('a -> 'b) Ctypes.fn ->
+  ('a -> 'b) Cbuf_static.fn ->
   unit
 
 val val_case :
@@ -34,7 +34,7 @@ val val_case :
 val constructor_decl :
   errno:[ `Ignore_errno | `Return_errno ] ->
   string ->
-  'a Ctypes.fn ->
+  'a Cbuf_static.fn ->
   Format.formatter ->
   unit
 
@@ -43,5 +43,5 @@ val inverse_case :
   constructor:string ->
   string ->
   Format.formatter ->
-  ('a -> 'b) Ctypes.fn ->
+  ('a -> 'b) Cbuf_static.fn ->
   unit

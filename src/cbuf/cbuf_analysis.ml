@@ -8,6 +8,7 @@
 (* Analysis for stub generation *)
 
 open Ctypes_static
+open Cbuf_static
 
 let is_float_primitive : type a. a typ -> bool =
   let open Ctypes_primitive_types in
