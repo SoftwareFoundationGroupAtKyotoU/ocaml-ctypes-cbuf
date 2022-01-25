@@ -102,3 +102,11 @@ val build_enum_type :
   'a typ
 
 val use_value : 'a -> unit
+
+type cposition = [ `First | `Last ]
+
+type _ cbuffers =
+  | LastBuf : int * ('a, 'b) pointer typ -> ('a, 'b) pointer cbuffers
+  | ConBuf :
+      ('a, 'b) pointer cbuffers * ('c, 'd) pointer cbuffers
+      -> ('a * 'c, [ `OCaml ]) pointer cbuffers
