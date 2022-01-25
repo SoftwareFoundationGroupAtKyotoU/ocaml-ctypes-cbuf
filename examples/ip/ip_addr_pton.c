@@ -30,9 +30,19 @@ int int_as_buffer(int *i) {
   return 0;
 }
 
-int multi_buffer(uint64_t in, uint64_t *out1, uint64_t *out2, uint64_t *out3) {
+void multi_buffer(uint64_t in, uint64_t *out1, uint64_t *out2, uint64_t *out3) {
   *out1 = in;
   *out2 = in << 1;
   *out3 = in << 2;
+}
+
+void last_cbuf(int in, unsigned char *out1, unsigned char *out2) {
+  *out1 = in;
+  *out2 = in << 1;
+}
+
+int first_cbuf(unsigned char *out1, unsigned char *out2, int in) {
+  *out1 = in;
+  *out2 = in << 1;
   return 0;
 }

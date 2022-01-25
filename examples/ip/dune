@@ -1,11 +1,11 @@
 (library
  (name bindings)
- (libraries ctypes str)
+ (libraries ctypes str ctypes.cbuf)
  (modules bindings))
 
 (executable
  (name bindgen)
- (libraries bindings ctypes.cbuf)
+ (libraries bindings str ctypes.cbuf)
  (modules bindgen))
 
 (rule
@@ -15,7 +15,7 @@
 
 (library
  (name cbuf_gen)
- (libraries ctypes)
+ (libraries ctypes str ctypes.cbuf)
  (modules cbuf_gen)
  (foreign_stubs
   (language c)
