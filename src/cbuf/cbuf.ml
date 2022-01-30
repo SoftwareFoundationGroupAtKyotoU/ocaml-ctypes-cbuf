@@ -8,7 +8,7 @@
 (* Cbuf public interface. *)
 include Cbuf_static
 
-module type FOREIGN = Ctypes.FOREIGN with type 'a fn = 'a Cbuf_static.fn
+module type FOREIGN = Ctypes.FOREIGN with type 'a fn = 'a fn
 module type BINDINGS = functor (F : FOREIGN) -> sig end
 
 type concurrency_policy =

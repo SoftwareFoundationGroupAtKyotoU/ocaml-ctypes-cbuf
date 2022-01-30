@@ -27,6 +27,7 @@ let () =
 
   let (out1, out2), ret = C.first_cbuf 4 in
   assert (ret = 0);
+  Format.printf "%d\n" (Bytes.length out1);
   List.iter
     (fun out ->
       let i = Bytes.get_int16_le out 0 in

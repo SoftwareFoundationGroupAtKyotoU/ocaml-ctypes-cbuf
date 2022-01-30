@@ -33,3 +33,8 @@
  (name ip)
  (libraries cbuf_gen ctypes bindings)
  (modules ip))
+
+(executable
+ (name bench)
+ (libraries cbuf_gen ctypes bindings)
+ (modules bench))
