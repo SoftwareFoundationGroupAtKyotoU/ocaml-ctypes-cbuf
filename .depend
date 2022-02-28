@@ -31,6 +31,8 @@ _build/examples/fts/stub-generation/fts_if.cmo : _build/src/ctypes/ctypes.cmi
 _build/examples/fts/stub-generation/fts_if.cmx : _build/src/ctypes/ctypes.cmx
 _build/examples/fts/stub-generation/stub-generator/fts_stub_generator.cmo : _build/src/cstubs/cstubs.cmi
 _build/examples/fts/stub-generation/stub-generator/fts_stub_generator.cmx : _build/src/cstubs/cstubs.cmx
+_build/examples/ip/bench.cmo : _build/src/ctypes/ctypes.cmi
+_build/examples/ip/bench.cmx : _build/src/ctypes/ctypes.cmx
 _build/examples/ip/bindgen.cmo : _build/src/cbuf/cbuf.cmi
 _build/examples/ip/bindgen.cmx : _build/src/cbuf/cbuf.cmx
 _build/examples/ip/bindings.cmo : _build/src/ctypes/ctypes.cmi _build/src/cbuf/cbuf.cmi

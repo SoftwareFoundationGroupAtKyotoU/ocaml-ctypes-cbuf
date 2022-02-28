@@ -23,7 +23,8 @@ let cases =
       ( (fun () ->
           let _ =
             (fun () ->
-              let b1 = Bytes.create 4 and b2 = Bytes.create 4 in
+              let b1 = Bytes.create 4 in
+              let b2 = Bytes.create 4 in
               let ret =
                 C.arity2_ 1
                   (Ctypes.ocaml_bytes_start b1)
@@ -41,9 +42,9 @@ let cases =
       ( (fun () ->
           let _ =
             (fun () ->
-              let b1 = Bytes.create 4
-              and b2 = Bytes.create 4
-              and b3 = Bytes.create 4 in
+              let b1 = Bytes.create 4 in
+              let b2 = Bytes.create 4 in
+              let b3 = Bytes.create 4 in
               let ret =
                 C.arity3_ 1
                   (Ctypes.ocaml_bytes_start b1)
@@ -58,7 +59,8 @@ let cases =
   ]
 
 let bench ((exp1, name1), (exp2, name2)) =
-  Printf.printf "%s - %s," name1 name2;
+  let n2 = ref (Printf.sprintf "%s," name2) in
+  Printf.printf "%s," name1;
   for _ = 1 to 100 do
     let s1 = Sys.time () in
     for _ = 1 to 1000000 do
@@ -70,8 +72,10 @@ let bench ((exp1, name1), (exp2, name2)) =
       exp2 ()
     done;
     let e2 = Sys.time () in
-    Printf.printf "%f," (e1 -. s1 -. (e2 -. s2))
+    Printf.printf "%f," (e1 -. s1);
+    n2 := !n2 ^ Printf.sprintf "%f," (e2 -. s2)
   done;
-  print_newline ()
+  print_newline ();
+  print_endline !n2
 
 let () = List.iter bench cases
