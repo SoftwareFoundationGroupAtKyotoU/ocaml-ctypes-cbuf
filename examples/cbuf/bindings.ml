@@ -61,12 +61,6 @@ module C (F : Cbuf.FOREIGN) = struct
     foreign "arity3"
       (int @-> ocaml_bytes @-> ocaml_bytes @-> ocaml_bytes @-> returning void)
 
-  (* void *
-     memcpy(void *restrict dst, const void *restrict src, size_t n); *)
-
-  (* let memcpy_manual =
-       foreign "memcpy" (ptr char @-> ptr char @-> int @-> returning void) *)
-
   let memcpy_ctypes =
     foreign "memcpy" (ocaml_bytes @-> ocaml_bytes @-> size_t @-> returning void)
 
