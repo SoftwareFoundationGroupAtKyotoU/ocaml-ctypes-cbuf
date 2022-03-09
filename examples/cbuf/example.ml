@@ -32,4 +32,12 @@ let () =
     (fun out ->
       let i = Bytes.get_int16_le out 0 in
       Format.printf "%d\n" i)
-    [ out1; out2 ]
+    [ out1; out2 ];
+
+  let src = Bytes.of_string "this is src string" in
+  let src_ptr = Ctypes.ocaml_bytes_start src in
+  let src_len = Bytes.length src in
+  let src_size_t = Unsigned.Size_t.of_int src_len in
+  let dest, _ = C.memcpy_cbuf src_ptr src_size_t in
+  Format.printf "%d\n" (Bytes.length dest);
+  Format.printf "%s\n" (Bytes.to_string dest)

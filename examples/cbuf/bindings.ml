@@ -21,9 +21,8 @@ module C (F : Cbuf.FOREIGN) = struct
   let last_cbuf =
     foreign "last_cbuf"
       (int
-      @-> retbuf ~cposition:`Last
-            (buffer 4 ocaml_bytes @* buffer 8 ocaml_bytes)
-            (returning int))
+      @-> retbuf (buffer 4 ocaml_bytes @* buffer 8 ocaml_bytes) (returning int)
+      )
 
   let first_cbuf =
     foreign "first_cbuf"
@@ -67,5 +66,5 @@ module C (F : Cbuf.FOREIGN) = struct
   let memcpy_cbuf =
     foreign "memcpy"
       (ocaml_bytes @-> size_t
-      @-> retbuf ~cposition:`First (buffer 4 ocaml_bytes) (returning void))
+      @-> retbuf ~cposition:`First (buffer 100 ocaml_bytes) (returning void))
 end
