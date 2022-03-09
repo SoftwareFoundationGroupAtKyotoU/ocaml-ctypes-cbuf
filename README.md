@@ -1,6 +1,7 @@
 # Cbuf
 
-This is a fork repository of [ocaml-ctypes](https://github.com/ocamllabs/ocaml-ctypes)
+This is a fork repository of [ocaml-ctypes](https://github.com/ocamllabs/ocaml-ctypes).
+
 Original README.md is [here](./README.original.md)
 
 ## インストール
