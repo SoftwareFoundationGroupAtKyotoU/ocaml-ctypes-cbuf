@@ -19,20 +19,12 @@
  (modules cbuf_gen)
  (foreign_stubs
   (language c)
-  (names ip_addr_pton cbuf_gen)))
-
-; (library
-;  (name cstubs_gen_sample)
-;  (libraries ctypes)
-;  (modules cstubs_gen_sample)
-;  (foreign_stubs
-;   (language c)
-;   (names ip_addr_pton cbuf_gen)))
+  (names example cbuf_gen)))
 
 (executable
- (name ip)
+ (name example)
  (libraries cbuf_gen ctypes bindings)
- (modules ip))
+ (modules example))
 
 (executable
  (name bench)
