@@ -1,0 +1,32 @@
+(library
+ (name bindings)
+ (libraries ctypes str ctypes.cbuf)
+ (modules bindings))
+
+(executable
+ (name bindgen)
+ (libraries bindings str ctypes.cbuf)
+ (modules bindgen))
+
+(rule
+ (targets cbuf_gen.c cbuf_gen.ml)
+ (action
+  (run ./bindgen.exe)))
+
+(library
+ (name cbuf_gen)
+ (libraries ctypes str ctypes.cbuf)
+ (modules cbuf_gen)
+ (foreign_stubs
+  (language c)
+  (names example cbuf_gen)))
+
+(executable
+ (name example)
+ (libraries cbuf_gen ctypes bindings)
+ (modules example))
+
+(executable
+ (name bench)
+ (libraries cbuf_gen ctypes bindings)
+ (modules bench))

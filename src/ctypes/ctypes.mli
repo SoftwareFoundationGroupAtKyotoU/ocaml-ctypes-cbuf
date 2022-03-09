@@ -22,7 +22,7 @@ type ('a, 'b) pointer = ('a, 'b) Ctypes_static.pointer
 
 (** {4 C-compatible pointers} *)
 
-type 'a ptr = ('a, [`C]) pointer
+type 'a ptr = ('a, [ `C ]) pointer
 (** The type of C-compatible pointer values.  A value of type [t ptr] can be
     used to read and write values of type [t] at particular addresses. *)
 
@@ -45,39 +45,43 @@ type 'a bigarray_class = 'a Ctypes_static.bigarray_class
     the Bigarray submodules. *)
 
 val genarray :
-  < element: 'a;
-    layout: 'l;
-    ba_repr: 'b;
-    bigarray: ('a, 'b, 'l) Bigarray_compat.Genarray.t;
-    carray: 'a carray;
-    dims: int array > bigarray_class
+  < element : 'a
+  ; layout : 'l
+  ; ba_repr : 'b
+  ; bigarray : ('a, 'b, 'l) Bigarray_compat.Genarray.t
+  ; carray : 'a carray
+  ; dims : int array >
+  bigarray_class
 (** The class of {!Bigarray.Genarray.t} values *)
 
 val array1 :
-  < element: 'a;
-    layout: 'l;
-    ba_repr: 'b;
-    bigarray: ('a, 'b, 'l) Bigarray_compat.Array1.t;
-    carray: 'a carray;
-    dims: int > bigarray_class
+  < element : 'a
+  ; layout : 'l
+  ; ba_repr : 'b
+  ; bigarray : ('a, 'b, 'l) Bigarray_compat.Array1.t
+  ; carray : 'a carray
+  ; dims : int >
+  bigarray_class
 (** The class of {!Bigarray.Array1.t} values *)
 
 val array2 :
-  < element: 'a;
-    layout: 'l;
-    ba_repr: 'b;
-    bigarray: ('a, 'b, 'l) Bigarray_compat.Array2.t;
-    carray: 'a carray carray;
-    dims: int * int > bigarray_class
+  < element : 'a
+  ; layout : 'l
+  ; ba_repr : 'b
+  ; bigarray : ('a, 'b, 'l) Bigarray_compat.Array2.t
+  ; carray : 'a carray carray
+  ; dims : int * int >
+  bigarray_class
 (** The class of {!Bigarray.Array2.t} values *)
 
 val array3 :
-  < element: 'a;
-    layout: 'l;
-    ba_repr: 'b;
-    bigarray: ('a, 'b, 'l) Bigarray_compat.Array3.t;
-    carray: 'a carray carray carray;
-    dims: int * int * int > bigarray_class
+  < element : 'a
+  ; layout : 'l
+  ; ba_repr : 'b
+  ; bigarray : ('a, 'b, 'l) Bigarray_compat.Array3.t
+  ; carray : 'a carray carray carray
+  ; dims : int * int * int >
+  bigarray_class
 (** The class of {!Bigarray.Array3.t} values *)
 
 (** {3 Struct and union types} *)
@@ -87,10 +91,10 @@ type ('a, 'kind) structured = ('a, 'kind) Ctypes_static.structured
     ['kind] parameter is a polymorphic variant type indicating whether the type
     represents a struct ([`Struct]) or a union ([`Union]). *)
 
-type 'a structure = ('a, [`Struct]) structured
+type 'a structure = ('a, [ `Struct ]) structured
 (** The type of values representing C struct types. *)
 
-type 'a union = ('a, [`Union]) structured
+type 'a union = ('a, [ `Union ]) structured
 (** The type of values representing C union types. *)
 
 type ('a, 't) field = ('a, 't) Ctypes_static.field
@@ -114,9 +118,10 @@ type 'a abstract = 'a Ctypes_static.abstract
     not actually a good match for [abstract], since values of type [pthread_t]
     are passed and returned by value.) *)
 
-include Ctypes_types.TYPE
- with type 'a typ = 'a Ctypes_static.typ
-  and type ('a, 's) field := ('a, 's) field
+include
+  Ctypes_types.TYPE
+    with type 'a typ = 'a Ctypes_static.typ
+     and type ('a, 's) field := ('a, 's) field
 
 (** {3 Operations on types} *)
 
@@ -127,6 +132,8 @@ val sizeof : 'a typ -> int
 val alignment : 'a typ -> int
 (** [alignment t] computes the alignment requirements of the type [t].  The
     exception {!IncompleteType} is raised if [t] is incomplete. *)
+
+val passable : 'a typ -> bool
 
 val format_typ : ?name:string -> Format.formatter -> 'a typ -> unit
 (** Pretty-print a C representation of the type to the specified formatter. *)
@@ -154,20 +161,20 @@ val string_of : 'a typ -> 'a -> string
 val null : unit ptr
 (** A null pointer. *)
 
-val (!@) : 'a ptr -> 'a
+val ( !@ ) : 'a ptr -> 'a
 (** [!@ p] dereferences the pointer [p].  If the reference type is a scalar
     type then dereferencing constructs a new value.  If the reference type is
     an aggregate type then dereferencing returns a value that references the
     memory pointed to by [p]. *)
 
-val (<-@) : 'a ptr -> 'a -> unit
+val ( <-@ ) : 'a ptr -> 'a -> unit
 (** [p <-@ v] writes the value [v] to the address [p]. *)
 
-val (+@) : ('a, 'b) pointer -> int -> ('a, 'b) pointer
+val ( +@ ) : ('a, 'b) pointer -> int -> ('a, 'b) pointer
 (** If [p] is a pointer to an array element then [p +@ n] computes the
     address of the [n]th next element. *)
 
-val (-@) : ('a, 'b) pointer -> int -> ('a, 'b) pointer
+val ( -@ ) : ('a, 'b) pointer -> int -> ('a, 'b) pointer
 (** If [p] is a pointer to an array element then [p -@ n] computes the address
     of the nth previous element. *)
 
@@ -213,7 +220,8 @@ val reference_type : 'a ptr -> 'a typ
 val ptr_of_raw_address : nativeint -> unit ptr
 (** Convert the numeric representation of an address to a pointer *)
 
-val funptr_of_raw_address : nativeint -> (unit -> unit) Ctypes_static.static_funptr
+val funptr_of_raw_address :
+  nativeint -> (unit -> unit) Ctypes_static.static_funptr
 (** Convert the numeric representation of an address to a function pointer *)
 
 val raw_address_of_ptr : unit ptr -> nativeint
@@ -243,8 +251,8 @@ val ocaml_bytes_start : bytes -> bytes ocaml
 
 (** {4 C array values} *)
 
-module CArray :
-sig
+(** Operations on C arrays. *)
+module CArray : sig
   type 'a t = 'a carray
 
   val get : 'a t -> int -> 'a
@@ -341,59 +349,80 @@ sig
   val element_type : 'a t -> 'a typ
   (** Retrieve the element type of an array. *)
 end
-(** Operations on C arrays. *)
 
 (** {4 Bigarray values} *)
 
-val bigarray_start : < element: 'a;
-                       layout: 'l;
-                       ba_repr: _;
-                       bigarray: 'b;
-                       carray: _;
-                       dims: _ > bigarray_class -> 'b -> 'a ptr
+val bigarray_start :
+  < element : 'a
+  ; layout : 'l
+  ; ba_repr : _
+  ; bigarray : 'b
+  ; carray : _
+  ; dims : _ >
+  bigarray_class ->
+  'b ->
+  'a ptr
 (** Return the address of the first element of the given Bigarray value. *)
 
-val bigarray_of_ptr : < element: 'a;
-                        layout: Bigarray_compat.c_layout;
-                        ba_repr: 'f;
-                        bigarray: 'b;
-                        carray: _;
-                        dims: 'i > bigarray_class ->
-    'i -> ('a, 'f) Bigarray_compat.kind -> 'a ptr -> 'b
+val bigarray_of_ptr :
+  < element : 'a
+  ; layout : Bigarray_compat.c_layout
+  ; ba_repr : 'f
+  ; bigarray : 'b
+  ; carray : _
+  ; dims : 'i >
+  bigarray_class ->
+  'i ->
+  ('a, 'f) Bigarray_compat.kind ->
+  'a ptr ->
+  'b
 (** [bigarray_of_ptr c dims k p] converts the C pointer [p] to a C-layout
     bigarray value.  No copy is made; the bigarray references the memory
     pointed to by [p]. *)
 
-val fortran_bigarray_of_ptr : < element: 'a;
-                                layout: Bigarray_compat.fortran_layout;
-                                ba_repr: 'f;
-                                bigarray: 'b;
-                                carray: _;
-                                dims: 'i > bigarray_class ->
-    'i -> ('a, 'f) Bigarray_compat.kind -> 'a ptr -> 'b
+val fortran_bigarray_of_ptr :
+  < element : 'a
+  ; layout : Bigarray_compat.fortran_layout
+  ; ba_repr : 'f
+  ; bigarray : 'b
+  ; carray : _
+  ; dims : 'i >
+  bigarray_class ->
+  'i ->
+  ('a, 'f) Bigarray_compat.kind ->
+  'a ptr ->
+  'b
 (** [fortran_bigarray_of_ptr c dims k p] converts the C pointer [p] to a
     Fortran-layout bigarray value.  No copy is made; the bigarray references
     the memory pointed to by [p]. *)
 
-val array_of_bigarray : < element: _;
-                          layout: Bigarray_compat.c_layout;
-                          ba_repr: _;
-                          bigarray: 'b;
-                          carray: 'c;
-                          dims: _ > bigarray_class -> 'b -> 'c
+val array_of_bigarray :
+  < element : _
+  ; layout : Bigarray_compat.c_layout
+  ; ba_repr : _
+  ; bigarray : 'b
+  ; carray : 'c
+  ; dims : _ >
+  bigarray_class ->
+  'b ->
+  'c
 (** [array_of_bigarray c b] converts the bigarray value [b] to a value of type
     {!CArray.t}.  No copy is made; the result occupies the same memory as
     [b]. *)
 
 (** Convert a Bigarray value to a C array. *)
 
-val bigarray_of_array : < element: 'a;
-                          layout: Bigarray_compat.c_layout;
-                          ba_repr: 'f;
-                          bigarray: 'b;
-                          carray: 'c carray;
-                          dims: 'i > bigarray_class ->
-    ('a, 'f) Bigarray_compat.kind -> 'c carray -> 'b
+val bigarray_of_array :
+  < element : 'a
+  ; layout : Bigarray_compat.c_layout
+  ; ba_repr : 'f
+  ; bigarray : 'b
+  ; carray : 'c carray
+  ; dims : 'i >
+  bigarray_class ->
+  ('a, 'f) Bigarray_compat.kind ->
+  'c carray ->
+  'b
 (** [bigarray_of_array c k a] converts the {!CArray.t} value [a] to a
     C-layout bigarray value.  No copy is made; the result occupies the
     same memory as [a]. *)
@@ -414,11 +443,11 @@ val getf : ((_, _) structured as 's) -> ('a, 's) field -> 'a
     [s].  The semantics for non-scalar types are non-copying, as for
     {!(!@)}.*)
 
-val (@.) : ((_, _) structured as 's) -> ('a, 's) field -> 'a ptr
+val ( @. ) : ((_, _) structured as 's) -> ('a, 's) field -> 'a ptr
 (** [s @. f] computes the address of the field [f] in the structure or union
     value [s]. *)
 
-val (|->) : ((_, _) structured as 's) ptr -> ('a, 's) field -> 'a ptr
+val ( |-> ) : ((_, _) structured as 's) ptr -> ('a, 's) field -> 'a ptr
 (** [p |-> f] computes the address of the field [f] in the structure or union
     value pointed to by [p]. *)
 
@@ -475,21 +504,21 @@ val coerce_fn : 'a fn -> 'b fn -> 'a -> 'b
     ctypes may both add new types of coercion and restrict the existing
     coercions. *)
 
-
 (** {2 binding interfaces}.
 *)
 
 (** Foreign function binding interface.
 
     The {!Foreign} and {!Cstubs} modules provide concrete implementations. *)
-module type FOREIGN =
-sig
+module type FOREIGN = sig
   type 'a fn
   type 'a return
-  val (@->) : 'a typ -> 'b fn -> ('a -> 'b) fn
+
+  val ( @-> ) : 'a typ -> 'b fn -> ('a -> 'b) fn
   val returning : 'a typ -> 'a return fn
 
   type 'a result
+
   val foreign : string -> ('a -> 'b) fn -> ('a -> 'b) result
   val foreign_value : string -> 'a typ -> 'a ptr result
 end
@@ -497,11 +526,11 @@ end
 (** Foreign types binding interface.
 
     The {!Cstubs} module builds concrete implementations. *)
-module type TYPE =
-sig
+module type TYPE = sig
   include Ctypes_types.TYPE
 
   type 'a const
+
   val constant : string -> 'a typ -> 'a const
   (** [constant name typ] retrieves the value of the compile-time constant
       [name] of type [typ].  It can be used to retrieve enum constants,
@@ -517,8 +546,12 @@ sig
 
          warning: overflow in implicit constant conversion *)
 
-  val enum : string -> ?typedef:bool ->
-    ?unexpected:(int64 -> 'a) -> ('a * int64 const) list -> 'a typ
+  val enum :
+    string ->
+    ?typedef:bool ->
+    ?unexpected:(int64 -> 'a) ->
+    ('a * int64 const) list ->
+    'a typ
   (** [enum name ?unexpected alist] builds a type representation for the
       enum named [name].  The size and alignment are retrieved so that the
       resulting type can be used everywhere an integer type can be used: as
@@ -567,8 +600,7 @@ sig
 end
 
 (** {2:roots Registration of OCaml values as roots} *)
-module Root :
-sig
+module Root : sig
   val create : 'a -> unit ptr
   (** [create v] allocates storage for the address of the OCaml value [v],
       registers the storage as a root, and returns its address. *)
@@ -609,5 +641,6 @@ exception IncompleteType
 *)
 
 type uncoercible_info
+
 exception Uncoercible of uncoercible_info
 (** An attempt was made to coerce between uncoercible types.  *)

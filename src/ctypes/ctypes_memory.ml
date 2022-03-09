@@ -21,9 +21,9 @@ let rec build : type a b. a typ -> (_, b typ) Fat.t -> a
     | Void ->
       fun _ -> ()
     | Primitive p -> Stubs.read p
-    | Struct { spec = Incomplete _ } ->
+    | Struct { spec = Incomplete _; _ } ->
       raise IncompleteType
-    | Struct { spec = Complete { size } } as reftyp ->
+    | Struct { spec = Complete { size; _ }; _ } as reftyp ->
       (fun buf ->
         let p = Stubs.allocate 1 size in
         let dst = Fat.make ~managed:(Some (Obj.repr p)) ~reftyp (Stubs.block_address p) in
@@ -33,10 +33,10 @@ let rec build : type a b. a typ -> (_, b typ) Fat.t -> a
       (fun buf -> CPointer (make_unmanaged ~reftyp (Stubs.Pointer.read buf)))
     | Funptr fn ->
       (fun buf -> Static_funptr (make_unmanaged ~reftyp:fn (Stubs.Pointer.read buf)))
-    | View { read; ty } ->
+    | View { read; ty; _ } ->
       let buildty = build ty in
       (fun buf -> read (buildty buf))
-    | OCaml _ -> (fun buf -> assert false)
+    | OCaml _ -> (fun _buf -> assert false)
     (* The following cases should never happen; non-struct aggregate
        types are excluded during type construction. *)
     | Union _ -> assert false
@@ -55,23 +55,23 @@ let rec write : type a b. a typ -> a -> (_, b) Fat.t -> unit
       (fun (CPointer p) dst -> Stubs.Pointer.write p dst)
     | Funptr _ ->
       (fun (Static_funptr p) dst -> Stubs.Pointer.write p dst)
-    | Struct { spec = Incomplete _ } -> raise IncompleteType
-    | Struct { spec = Complete _ } as s -> write_aggregate (sizeof s)
-    | Union { uspec = None } -> raise IncompleteType
-    | Union { uspec = Some { size } } -> write_aggregate size
-    | Abstract { asize } -> write_aggregate asize
+    | Struct { spec = Incomplete _; _ } -> raise IncompleteType
+    | Struct { spec = Complete _; _ } as s -> write_aggregate (sizeof s)
+    | Union { uspec = None; _ } -> raise IncompleteType
+    | Union { uspec = Some { size; _ }; _ } -> write_aggregate size
+    | Abstract { asize; _ } -> write_aggregate asize
     | Array _ as a ->
       let size = sizeof a in
-      (fun { astart = CPointer src } dst ->
+      (fun { astart = CPointer src; _ } dst ->
         Stubs.memcpy ~size ~dst ~src)
-    | Bigarray b as t ->
+    | Bigarray _b as t ->
       let size = sizeof t in
       (fun ba dst ->
         let src = Fat.make ~managed:ba ~reftyp:Void
           (Ctypes_bigarray.unsafe_address ba)
         in
         Stubs.memcpy ~size ~dst ~src)
-    | View { write = w; ty } ->
+    | View { write = w; ty; _ } ->
       let writety = write ty in
       (fun v -> writety (w v))
     | OCaml _ -> raise IncompleteType
@@ -82,9 +82,9 @@ let rec (!@) : type a. a ptr -> a
   = fun (CPointer cptr as ptr) ->
     match Fat.reftype cptr with
       | Void -> raise IncompleteType
-      | Union { uspec = None } -> raise IncompleteType
-      | Struct { spec = Incomplete _ } -> raise IncompleteType
-      | View { read; ty } -> read (!@ (CPointer (Fat.coerce cptr ty)))
+      | Union { uspec = None; _ } -> raise IncompleteType
+      | Struct { spec = Incomplete _; _ } -> raise IncompleteType
+      | View { read; ty; _ } -> read (!@ (CPointer (Fat.coerce cptr ty)))
       (* If it's a reference type then we take a reference *)
       | Union _ -> { structured = ptr }
       | Struct _ -> { structured = ptr }
@@ -167,12 +167,12 @@ module CArray =
 struct
   type 'a t = 'a carray
 
-  let check_bound { alength } i =
+  let check_bound { alength; _ } i =
     if i < 0 || i >= alength then
       invalid_arg "index out of bounds"
 
-  let unsafe_get { astart } n = !@(astart +@ n)
-  let unsafe_set { astart } n v = (astart +@ n) <-@ v
+  let unsafe_get { astart; _ } n = !@(astart +@ n)
+  let unsafe_set { astart; _ } n v = (astart +@ n) <-@ v
 
   let get arr n =
     check_bound arr n;
@@ -182,8 +182,8 @@ struct
     check_bound arr n;
     unsafe_set arr n v
 
-  let start { astart } = astart
-  let length { alength } = alength
+  let start { astart; _ } = astart
+  let length { alength; _ } = alength
   let from_ptr astart alength = { astart; alength }
 
   let fill { alength; astart = CPointer p } v =
@@ -208,7 +208,7 @@ struct
   let copy {astart = CPointer src; alength} =
     begin
       let reftyp = Fat.reftype src in
-      let CPointer dst as r = allocate_n reftyp alength in
+      let CPointer dst as r = allocate_n reftyp ~count:alength in
       let () = Stubs.memcpy ~dst ~src ~size:(alength * sizeof reftyp) in
       from_ptr r alength
     end
@@ -218,7 +218,7 @@ struct
   then invalid_arg "CArray.sub"
   else copy { astart = arr.astart +@ pos; alength = len }
 
-  let element_type { astart } = reference_type astart
+  let element_type { astart; _ } = reference_type astart
 
   let of_string string =
     let len = String.length string in
@@ -280,7 +280,7 @@ let make ?finalise s =
     | Some f -> Some (fun structured -> f { structured })
     | None -> None in
   { structured = allocate_n ?finalise s ~count:1 }
-let (|->) (CPointer p) { ftype; foffset } =
+let (|->) (CPointer p) { ftype; foffset; _ } =
   CPointer (Fat.(add_bytes (Fat.coerce p ftype) foffset))
 
 let (@.) { structured = p } f = p |-> f

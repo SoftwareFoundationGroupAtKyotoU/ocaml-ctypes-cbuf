@@ -61,17 +61,17 @@ struct
 
   let make ~managed ~reftyp raw = { reftyp; raw; managed }
 
-  let is_null { raw } = Raw.(compare zero) raw = 0
+  let is_null { raw; _ } = Raw.(compare zero) raw = 0
 
-  let reftype { reftyp } = reftyp
+  let reftype { reftyp; _ } = reftyp
 
-  let managed { managed } = managed
+  let managed { managed; _ } = managed
 
   let set_managed p m = p.managed <- m
 
   let coerce p reftyp = { p with reftyp }
 
-  let unsafe_raw_addr { raw } = raw
+  let unsafe_raw_addr { raw; _ } = raw
 
   let add_bytes p bytes = { p with raw = Raw.(add p.raw (of_int bytes)) }
 

@@ -1,68 +1,94 @@
-ctypes is a library for binding to C libraries using pure OCaml.  The primary aim is to make writing C extensions as straightforward as possible.
+# Cbuf
 
-The core of ctypes is a set of combinators for describing the structure of C types -- numeric types, arrays, pointers, structs, unions and functions.  You can use these combinators to describe the types of the functions that you want to call, then bind directly to those functions -- all without writing or generating any C!
+This is a fork repository of [ocaml-ctypes](https://github.com/ocamllabs/ocaml-ctypes).
 
-![GitHub Actions status](https://github.com/ocamllabs/ocaml-ctypes/workflows/Ctypes/badge.svg)
+Original README.md is [here](./README.original.md)
 
-## Usage
+## インストール
 
-Suppose you want to bind to the following C functions:
-
-```C
-   int sigemptyset(sigset_t *set);
-   int sigfillset(sigset_t *set);
-   int sigaddset(sigset_t *set, int signum);
-   int sigdelset(sigset_t *set, int signum);
-   int sigismember(const sigset_t *set, int signum);
+```sh
+$ make && make install
 ```
 
-Using ctypes you can describe the interfaces to these functions as follows:
+NOTE: Ctypes がすでにインストールされている場合は、先にアンインストールしてください。
 
-```OCaml
-   let sigemptyset = foreign "sigemptyset" (ptr sigset_t @-> returning int)
-   let sigfillset = foreign "sigfillset" (ptr sigset_t @-> returning int)
-   let sigaddset = foreign "sigaddset" (ptr sigset_t @-> int @-> returning int)
-   let sigdelset = foreign "sigdelset" (ptr sigset_t @-> int @-> returning int)
-   let sigismember = foreign "sigismember" (ptr sigset_t @-> int @-> returning int)
+```sh
+$ make uninstall
 ```
 
-The names bound by this code have the types you might expect:
+## 使用方法
 
-```OCaml
-   val sigemptyset : sigset_t ptr -> int
-   val sigfillset : sigset_t ptr -> int
-   val sigaddset : sigset_t ptr -> int -> int
-   val sigdelset : sigset_t ptr -> int -> int
-   val sigismember : sigset_t ptr -> int -> int
+以下の C の関数をバインドしたいとする。
+
+```c
+void *memcpy(void *restrict dst, const void *restrict src, size_t n);
+int last_cbuf(int in, unsigned char *out1, unsigned char *out2);
+int first_cbuf(unsigned char *out1, unsigned char *out2, int in);
 ```
 
-That's all there is to it.  Unlike the [usual way](http://caml.inria.fr/pub/docs/manual-ocaml/intfc.html) of writing C extensions, there are no C "stub" functions to write, so there's much less opportunity for error.
+Cbuf による関数型の記述は以下のようになる。
 
-The documentation and source distribution contain more complex examples, involving structs, unions, arrays, callback functions, and so on, and show how to create and use C values (like instances of `sigset_t ptr`) in OCaml.
+```ml
+module C (F : Cbuf.FOREIGN) = struct
+  (* val memcpy : bytes ocaml -> Unsigned.size_t -> bytes * unit return *)
+  let memcpy =
+    foreign "memcpy"
+      (ocaml_bytes @-> size_t
+      @-> retbuf ~cposition:`First (buffer 4 ocaml_bytes) (returning void))
+  (* val last_cbuf : int -> (bytes * bytes) * int return *)
+  let last_cbuf =
+    foreign "last_cbuf"
+      (int
+      @-> retbuf (buffer 4 ocaml_bytes @* buffer 8 ocaml_bytes) (returning int)
+      )
+  (* val first_cbuf : int -> (bytes * bytes) * int return *)
+  let first_cbuf =
+    foreign "first_cbuf"
+      (int
+      @-> retbuf ~cposition:`First
+            (buffer 4 ocaml_bytes @* buffer 8 ocaml_bytes)
+            (returning int))
+end
+```
+
+これらの関数型の記述を元に C と OCaml のプログラムを生成する。
+
+```ml
+Cbuf.write_c fmt1 (module Bindings.C);
+Cbuf.write_ml fmt2 (module Bindings.C)
+```
+
+生成したコードを元に C の関数を OCaml から呼び出す。
+
+```ml
+module C = Bindings.C (Cbuf_gen)
+
+let dest, _ = C.memcpy_cbuf src n in ...
+let (out1, out2), _ = C.last_cbuf 3 in ...
+let (out1, out2), ret = C.first_cbuf 4 in ...
+```
+
+## 開発
+
+Cbuf は Cstubs のコードを元に実装しています。
+
+Cstubs から主に変更を加えたファイル:
+
+[./src/cbuf](./src/cbuf)
+
+```
+.
+├── cbuf.ml                 # Cbufのエントリーポイント (FOREIGN, write_c, write_mlなど)
+├── cbuf.mli                # public interface
+├── cbuf_generate_c.ml      # Cbufに対応するCの生成ロジックを追加した
+├── cbuf_generate_ml.ml     # Cbufに対応するOCamlの生成ロジックを追加した (pattern_and_exp_of_cbuffersなど)
+├── cbuf_internals.ml       # 生成されたOCamlのモジュールからインポートされるモジュール
+├── cbuf_static.ml          # 追加した主な関数など (@*, retbuf, buffer, cpositionなど)
+...
+```
 
 ## Links
 
-* [Chapter 19: Foreign Function Interface][rwo-ffi] of [Real World OCaml][rwo] describes ctypes
-* [Modular Foreign Function Bindings][mirage-blogpost] introduces ctypes in the context of the [Mirage][mirage] library operating system
-* [Tutorial][tutorial]
-* [API documentation][apidoc]
-* [Mailing list][mailing-list]
-* [Type-safe C bindings using ocaml-ctypes and stub generation][sjb-cstubs-post] introduces the [Cstubs][cstubs] interface
-* [Using Cstubs_structs][orbitz-cstubs_structs] shows how to use the [`Cstubs_structs`][cstubs_structs] module to reliably determine data layout
-* [A modular foreign function interface][scp-extended] is a research paper (extending an [earlier paper][flops-paper]) that presents the design of ctypes
-* [FAQ][faq]
-
-[rwo-ffi]: https://dev.realworldocaml.org/foreign-function-interface.html
-[rwo]: http://realworldocaml.org/
-[mirage-blogpost]: https://mirage.io/blog/modular-foreign-function-bindings
-[tutorial]: https://github.com/ocamllabs/ocaml-ctypes/wiki/ctypes-tutorial
-[apidoc]: https://docs.ocaml.pro/docs/LIBRARY.ctypes@ctypes.0.17.1/index.html
-[mailing-list]: http://lists.ocaml.org/listinfo/ctypes
-[faq]: https://github.com/ocamllabs/ocaml-ctypes/wiki/FAQ
-[mirage]: https://mirage.io/
-[sjb-cstubs-post]: http://simonjbeaumont.com/posts/ocaml-ctypes/
-[cstubs]: https://github.com/ocamllabs/ocaml-ctypes/blob/master/src/cstubs/cstubs.mli
-[orbitz-cstubs_structs]: https://github.com/ocamllabs/ocaml-ctypes/blob/master/examples/cstubs_structs/README.md
-[cstubs_structs]: http://ocamllabs.github.io/ocaml-ctypes/Cstubs_structs.html
-[flops-paper]: http://www.cl.cam.ac.uk/~jdy22/papers/declarative-foreign-function-binding-through-generic-programming.pdf
-[scp-extended]: http://www.cl.cam.ac.uk/~jdy22/papers/a-modular-foreign-function-interface.pdf
+- [Cbuf example project](./examples/cbuf/README.md)
+- [ocaml-sodium binding using Cbuf](https://github.com/atrn0/ocaml-sodium)
+- [OCaml 用 FFI ライブラリ Ctypes の参照渡し関数への拡張](./grad_thesis.pdf)

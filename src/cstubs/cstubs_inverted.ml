@@ -52,7 +52,7 @@ let collector () : (module INTERNAL) * (unit -> decl list) =
    (fun () -> List.rev !decls))
 
 let format_enum_values fmt infos =
-  List.iter (fun (Fn ({fn_name}, _)) -> Format.fprintf fmt "@[fn_%s,@]@ " fn_name) infos
+  List.iter (fun (Fn ({fn_name; _}, _)) -> Format.fprintf fmt "@[fn_%s,@]@ " fn_name) infos
 
 let c_prologue fmt register infos =
   Format.fprintf fmt "#include <caml/memory.h>@\n";
@@ -82,7 +82,7 @@ let gen_c fmt register infos =
     List.iter (c_function fmt) infos
   end
 
-let c_declaration fmt (Fn ({fn_name; fn_runtime_lock}, fn)) : unit =
+let c_declaration fmt (Fn ({fn_name; fn_runtime_lock = _}, fn)) : unit =
   Cstubs_generate_c.inverse_fn_decl ~stub_name:fn_name fmt fn
 
 let write_structure_declaration fmt (Ty ty) =
@@ -120,6 +120,7 @@ let write_c fmt ~prefix (module B : BINDINGS) : unit =
   Format.fprintf fmt "@."
 
 let write_c_header fmt ~prefix (module B : BINDINGS) : unit =
+  let _ = prefix in
   let m, decls = collector () in
   let module M = B((val m)) in
   List.iter (write_declaration fmt) (decls ());
@@ -136,7 +137,7 @@ let gen_ml fmt register (infos : fn_info list) : unit =
   Format.fprintf fmt
     "type 'a name = @\n";
   ListLabels.iter infos
-    ~f:(fun (Fn ({fn_name}, fn)) ->
+    ~f:(fun (Fn ({fn_name; _}, fn)) ->
         Cstubs_generate_ml.constructor_decl ~concurrency:`Sequential
           ~errno:`Ignore_errno
           (Printf.sprintf "Fn_%s" fn_name) fn fmt);
@@ -152,7 +153,7 @@ let gen_ml fmt register (infos : fn_info list) : unit =
   Format.fprintf fmt
     "fun ?runtime_lock name fn f -> match fn, name with@\n@[";
   ListLabels.iter infos
-    ~f:(fun (Fn ({fn_name}, fn)) ->
+    ~f:(fun (Fn ({fn_name; _}, fn)) ->
       Cstubs_generate_ml.inverse_case ~register_name:"register_value"
         ~constructor:(Printf.sprintf "Fn_%s" fn_name) fn_name fmt fn);
   Format.fprintf fmt

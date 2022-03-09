@@ -15,7 +15,8 @@ BUILDDIR=_build
 BASE_PROJECTS=configure libffi-abigen configured ctypes ctypes-top
 FOREIGN_PROJECTS=test-libffi ctypes-foreign
 STUB_PROJECTS=cstubs
-PROJECTS=$(BASE_PROJECTS) $(FOREIGN_PROJECTS) $(STUB_PROJECTS)
+CBUF_PROJECTS=cbuf
+PROJECTS=$(BASE_PROJECTS) $(FOREIGN_PROJECTS) $(STUB_PROJECTS) $(CBUF_PROJECTS)
 DEP_DIRS=$(foreach project,$(PROJECTS),$($(project).dir))
 GENERATED=src/ctypes/ctypes_primitives.ml	\
           src/ctypes-foreign/libffi_abi.ml \
@@ -56,6 +57,7 @@ all: libffi.config $(PROJECTS)
 ctypes-base: $(BASE_PROJECTS)
 ctypes-foreign: ctypes-base test-libffi
 ctypes-stubs: ctypes-base $(STUB_PROJECTS)
+ctypes-cbuf: ctypes-base $(CBUF_PROJECTS)
 
 clean: clean-examples clean-tests
 	rm -fr _build
@@ -88,6 +90,18 @@ cstubs.extra_hs = $(package_integers_path)/ocaml_integers.h
 
 cstubs: PROJECT=cstubs
 cstubs: $(cstubs.dir)/$(cstubs.extra_mls) $$(LIB_TARGETS)
+
+# cbuf subproject
+cbuf.public = cbuf cbuf_internals
+cbuf.dir = src/cbuf
+cbuf.subproject_deps = ctypes
+cbuf.deps = str integers
+cbuf.install = yes
+cbuf.install_native_objects = yes
+cstubs.extra_hs = $(package_integers_path)/ocaml_integers.h
+
+cbuf: PROJECT=cbuf
+cbuf: $(cbuf.dir)/$(cbuf.extra_mls) $$(LIB_TARGETS)
 
 # ctypes-foreign subproject
 ctypes-foreign.public = dl libffi_abi foreign

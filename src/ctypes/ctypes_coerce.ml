@@ -65,7 +65,7 @@ let ml_prim_coercion :
   | ML_ullong, ML_ullong -> Some Id
   | ML_ulong, ML_ulong -> Some Id
   | ML_ushort, ML_ushort -> Some Id
-  | l, r -> None
+  | _l, _r -> None
 
 let rec coercion : type a b. a typ -> b typ -> (a, b) coercion =
   fun atyp btyp -> match atyp, btyp with
@@ -92,9 +92,9 @@ let rec coercion : type a b. a typ -> b typ -> (a, b) coercion =
     | exception Uncoercible _ ->
        Coercion (fun (CPointer p) -> CPointer (Ctypes_ptr.Fat.coerce p b))
     end
-  | Pointer a, Funptr b ->
+  | Pointer _a, Funptr b ->
     Coercion (fun (CPointer p) -> Static_funptr (Ctypes_ptr.Fat.coerce p b))
-  | Funptr a, Pointer b ->
+  | Funptr _a, Pointer b ->
     Coercion (fun (Static_funptr p) -> CPointer (Ctypes_ptr.Fat.coerce p b))
   | Funptr a, Funptr b ->
     begin match fn_coercion a b with

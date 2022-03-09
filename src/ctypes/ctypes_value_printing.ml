@@ -17,12 +17,12 @@ let rec format : type a. a typ -> Format.formatter -> a -> unit
   | Funptr _ -> format_funptr fmt v
   | Struct _ -> format_structured fmt v
   | Union _ -> format_structured fmt v
-  | Array (a, n) -> format_array fmt v
-  | Bigarray ba -> Format.fprintf fmt "<bigarray %a>"
+  | Array (_a, _n) -> format_array fmt v
+  | Bigarray _ba -> Format.fprintf fmt "<bigarray %a>"
     (fun fmt -> Ctypes_type_printing.format_typ fmt) typ
   | Abstract _ -> format_structured fmt v
   | OCaml _ -> format_ocaml fmt v
-  | View {write; ty; format=f} ->
+  | View {write; ty; format=f; _} ->
     begin match f with
       | None -> format ty fmt (write v)
       | Some f -> f fmt v
@@ -31,15 +31,15 @@ and format_structured : type a b. Format.formatter -> (a, b) structured -> unit
   = fun fmt ({structured = CPointer p} as s) ->
     let open Format in
     match Ctypes_ptr.Fat.reftype p with
-    | Struct {fields} ->
+    | Struct {fields; _} ->
       fprintf fmt "{@;<1 2>@[";
       format_fields "," fields fmt s;
       fprintf fmt "@]@;<1 0>}"
-    | Union {ufields} ->
+    | Union {ufields; _} ->
       fprintf fmt "{@;<1 2>@[";
       format_fields " |" ufields fmt s;
       fprintf fmt "@]@;<1 0>}"
-    | Abstract abs ->
+    | Abstract _abs ->
       pp_print_string fmt "<abstract>"
     | _ -> raise (Unsupported "unknown structured type")
 and format_array : type a. Format.formatter -> a carray -> unit
@@ -76,7 +76,7 @@ and format_fields : type a b. string -> (a, b) structured boxed_field list ->
     let last_field = List.length fields - 1 in
     let open Format in
     List.iteri
-      (fun i (BoxedField ({ftype; foffset; fname} as f)) ->
+      (fun i (BoxedField ({ftype; foffset = _; fname} as f)) ->
         fprintf fmt "@[%s@] = @[%a@]%s@;" fname (format ftype) (getf s f)
           (if i <> last_field then sep else ""))
       fields
